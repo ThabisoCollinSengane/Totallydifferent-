@@ -85,7 +85,12 @@
     display: flex; align-items: center; justify-content: center; overflow: hidden;
     position: relative;
   }
-  .product-img img { width: 100%; height: 100%; object-fit: cover; }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.35s ease, transform 0.5s ease; }
+  .product-img .img-alt {
+    position: absolute; inset: 0; opacity: 0;
+  }
+  .product-card:hover .product-img .img-alt { opacity: 1; }
+  .product-card:hover .product-img img { transform: scale(1.04); }
   .product-img-placeholder {
     font-size: 48px; color: var(--grey-border);
     display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
@@ -114,7 +119,17 @@
   }
   .add-btn:hover { background: #222; }
   .add-btn:disabled { background: var(--grey); cursor: not-allowed; }
-  .add-btn.added { background: var(--gold); color: var(--black); }
+  .add-btn.added { background: var(--gold); color: var(--black); animation: addPop 0.4s ease; }
+
+  /* ANIMATIONS */
+  @keyframes cardIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .product-card { opacity: 0; animation: cardIn 0.45s ease forwards; }
+  @keyframes addPop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+  @keyframes cartBump { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+  .cart-count.bump { animation: cartBump 0.45s ease; }
+  @keyframes flyToCart { 0% { opacity: 0.9; transform: translate(0,0) scale(1); } 100% { opacity: 0; transform: var(--fly-to) scale(0.2); } }
+  .fly-img { position: fixed; width: 60px; height: 76px; border-radius: 4px; object-fit: cover; z-index: 500; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.25); animation: flyToCart 0.6s cubic-bezier(0.5,-0.3,0.7,0.6) forwards; }
+  @media (prefers-reduced-motion: reduce) { .product-card, .cart-count.bump, .add-btn.added, .fly-img { animation: none !important; opacity: 1 !important; } }
 
   /* LOADING + EMPTY */
   .loading { text-align: center; padding: 64px 24px; color: var(--grey); font-size: 14px; }
@@ -360,15 +375,18 @@
       grid.innerHTML = '<div class="empty"><h3>Nothing here yet</h3><p>Check back soon.</p></div>';
       return;
     }
-    grid.innerHTML = products.map(p => productCardHTML(p)).join('');
+    grid.innerHTML = products.map((p, i) => productCardHTML(p, i)).join('');
   }
 
-  function productCardHTML(p) {
+  function productCardHTML(p, index = 0) {
     const variants = p.product_variants || p.variants || [];
     const firstVariant = variants[0];
-    const imgHtml = (p.images && p.images[0])
-      ? `<img src="${escHtml(p.images[0])}" alt="${escHtml(p.name)}" loading="lazy">`
+    const imgs = p.images || [];
+    const imgHtml = imgs[0]
+      ? `<img src="${escHtml(imgs[0])}" alt="${escHtml(p.name)}" loading="lazy">${
+          imgs[1] ? `<img class="img-alt" src="${escHtml(imgs[1])}" alt="" loading="lazy">` : ''}`
       : `<div class="product-img-placeholder">${p.category === 'hair' ? '✨' : '👕'}</div>`;
+    const delay = Math.min(index, 11) * 0.05;
 
     const variantChips = variants.map(v => `
       <button
@@ -388,7 +406,7 @@
       : p.base_price;
 
     return `
-      <div class="product-card" id="card-${p.id}">
+      <div class="product-card" id="card-${p.id}" style="animation-delay:${delay}s">
         <div class="product-img">
           ${imgHtml}
           <span class="product-cat-badge">${p.category}</span>
@@ -448,6 +466,8 @@
     saveCart();
     updateCartUI();
     showToast(`${product.name} added to bag`);
+    flyToCart(card, product);
+    bumpCart();
 
     const addBtn = document.getElementById(`add-${productId}`);
     addBtn.textContent = '✓ Added';
@@ -456,6 +476,33 @@
       addBtn.textContent = 'Add to Bag';
       addBtn.className = 'add-btn';
     }, 1500);
+  }
+
+  // Animate a thumbnail flying from the product card into the bag button
+  function flyToCart(card, product) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!product.images || !product.images[0]) return;
+    const imgEl = card.querySelector('.product-img img');
+    const cartBtn = document.querySelector('.cart-btn');
+    if (!imgEl || !cartBtn) return;
+    const from = imgEl.getBoundingClientRect();
+    const to = cartBtn.getBoundingClientRect();
+    const fly = document.createElement('img');
+    fly.src = product.images[0];
+    fly.className = 'fly-img';
+    fly.style.left = from.left + 'px';
+    fly.style.top = from.top + 'px';
+    fly.style.setProperty('--fly-to',
+      `translate(${to.left + to.width / 2 - from.left - 30}px, ${to.top + to.height / 2 - from.top - 38}px)`);
+    document.body.appendChild(fly);
+    fly.addEventListener('animationend', () => fly.remove());
+  }
+
+  function bumpCart() {
+    const c = document.getElementById('cart-count');
+    c.classList.remove('bump');
+    void c.offsetWidth; // restart animation
+    c.classList.add('bump');
   }
 
   function saveCart() {
@@ -629,7 +676,7 @@
       cart = [];
       updateCartUI();
 
-      window.location.href = data.payment_url;
+      window.location.href = data.authorization_url || data.payment_url;
     } catch (e) {
       errEl.textContent = e.message;
       errEl.classList.add('visible');

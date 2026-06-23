@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/", "destination": "/apps/store/index.html" },
-    { "source": "/checkout/confirm", "destination": "/apps/checkout/confirm.html" }
+    { "source": "/checkout/confirm", "destination": "/apps/checkout/confirm.html" },
+    { "source": "/admin", "destination": "/apps/admin/index.html" }
   ]
 }

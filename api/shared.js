@@ -68,6 +68,21 @@ async function verifyPaystackTx(ref, expectedZAR) {
   return { ok: true, pd };
 }
 
+// Upload a base64 image to the public product-images bucket, return its public URL
+async function uploadProductImage({ filename, contentBase64, contentType }) {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowed.includes(contentType)) throw new Error('Unsupported image type');
+  const buffer = Buffer.from(contentBase64, 'base64');
+  if (buffer.length > 5 * 1024 * 1024) throw new Error('Image exceeds 5MB limit');
+  const ext  = (filename.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb().storage.from('product-images')
+    .upload(path, buffer, { contentType, upsert: false });
+  if (error) throw new Error('Upload failed: ' + error.message);
+  const { data } = sb().storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 // Decrement stock atomically after confirmed payment
 async function decrementStock(lines) {
   for (const line of lines) {
@@ -106,4 +121,4 @@ function orderConfirmHtml({ order_ref, buyer_name, total }) {
 </body></html>`;
 }
 
-module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, sendEmail, orderConfirmHtml, PAYSTACK_SECRET };
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET };
