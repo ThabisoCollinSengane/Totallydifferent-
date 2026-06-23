@@ -113,14 +113,14 @@
 <!-- AUTH GATE -->
 <div class="gate" id="gate">
   <h1>Admin access</h1>
-  <p>Enter the Supabase <strong>service-role key</strong> to manage products and orders.</p>
-  <div class="warn">⚠ This key has full database access. Only enter it on a device you trust. It is kept in this tab's memory only (sessionStorage) and is never saved to the site.</div>
+  <p>Sign in with your admin password to manage products and orders.</p>
   <div class="field">
-    <label>Service-role key</label>
-    <input type="password" id="key-input" placeholder="eyJhbGciOi…" autocomplete="off">
+    <label>Password</label>
+    <input type="password" id="key-input" placeholder="••••••••" autocomplete="current-password">
   </div>
-  <button class="btn btn-gold" style="width:100%" onclick="signIn()">Unlock dashboard</button>
+  <button class="btn btn-gold" style="width:100%" id="signin-btn" onclick="signIn()">Sign in</button>
   <p id="gate-err" class="muted" style="color:var(--red);margin-top:12px"></p>
+  <p class="muted" style="margin-top:14px">A signed session lasts 12 hours. Your password is never stored in the browser.</p>
 </div>
 
 <!-- DASHBOARD -->
@@ -172,28 +172,43 @@
 <script>
   const API = '/api';
   const STATUSES = ['pending','paid','packed','shipped','delivered','cancelled'];
-  let KEY = sessionStorage.getItem('td_admin_key') || '';
+  let KEY = sessionStorage.getItem('td_admin_token') || '';
   let products = [];
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   function authHeaders(extra) { return Object.assign({ 'Authorization': 'Bearer ' + KEY }, extra || {}); }
 
   async function signIn() {
-    const val = document.getElementById('key-input').value.trim();
-    if (!val) return;
-    KEY = val;
-    const res = await fetch(`${API}/admin/products`, { headers: authHeaders() });
-    if (res.status === 401) {
-      document.getElementById('gate-err').textContent = 'That key was rejected. Check it and try again.';
-      KEY = '';
-      return;
-    }
-    sessionStorage.setItem('td_admin_key', KEY);
-    showDash();
+    const pw = document.getElementById('key-input').value;
+    const err = document.getElementById('gate-err');
+    const btn = document.getElementById('signin-btn');
+    err.textContent = '';
+    if (!pw) return;
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    try {
+      const res = await fetch(`${API}/admin/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }),
+      });
+      const data = await res.json();
+      if (!res.ok) { err.textContent = data.error === 'Admin login not configured'
+        ? 'Admin login is not configured yet — set ADMIN_PASSWORD in Vercel.'
+        : 'Incorrect password. Try again.'; return; }
+      KEY = data.token;
+      sessionStorage.setItem('td_admin_token', KEY);
+      document.getElementById('key-input').value = '';
+      showDash();
+    } catch (e) { err.textContent = 'Network error — please retry.'; }
+    finally { btn.disabled = false; btn.textContent = 'Sign in'; }
+  }
+
+  // Any 401 mid-session means the token expired — bounce back to the gate
+  function requireAuth(res) {
+    if (res.status === 401) { logout(); toast('Session expired — please sign in again', true); throw new Error('Unauthorized'); }
+    return res;
   }
 
   function logout() {
-    sessionStorage.removeItem('td_admin_key');
+    sessionStorage.removeItem('td_admin_token');
     KEY = '';
     document.getElementById('dash').classList.add('hide');
     document.getElementById('logout-btn').classList.add('hide');
@@ -219,7 +234,7 @@
     const el = document.getElementById('products-list');
     el.innerHTML = '<div class="loading">Loading products…</div>';
     try {
-      const res = await fetch(`${API}/admin/products`, { headers: authHeaders() });
+      const res = requireAuth(await fetch(`${API}/admin/products`, { headers: authHeaders() }));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       products = data.products || [];
@@ -274,6 +289,15 @@
               <button class="btn btn-sm" onclick="savePrice('${p.id}')">Save price</button>
               <button class="btn btn-sm" onclick="toggleFlag('${p.id}','is_featured',${!p.is_featured})">${p.is_featured ? 'Unfeature' : 'Feature'}</button>
               <button class="btn btn-sm btn-danger" onclick="toggleFlag('${p.id}','is_active',${!p.is_active})">${p.is_active ? 'Hide' : 'Show'}</button>
+              <button class="btn btn-sm" onclick="toggleEdit('${p.id}')">Edit details</button>
+            </div>
+            <div class="edit-details hide" id="edit-${p.id}">
+              <div class="row" style="margin-top:10px">
+                <div><label>Name</label><input id="ed-name-${p.id}" value="${esc(p.name)}"></div>
+                <div><label>Subcategory</label><input id="ed-sub-${p.id}" value="${esc(p.subcategory || '')}"></div>
+              </div>
+              <div class="field"><label>Description</label><textarea id="ed-desc-${p.id}">${esc(p.description || '')}</textarea></div>
+              <button class="btn btn-sm" onclick="saveDetails('${p.id}')">Save details</button>
             </div>
             <div class="variants">
               ${variantRows}
@@ -316,6 +340,15 @@
 
   async function savePrice(id) {
     try { await patchProduct(id, { base_price: parseFloat(val('price-' + id)) }); toast('Price updated'); loadProducts(); }
+    catch (e) { toast(e.message, true); }
+  }
+
+  function toggleEdit(id) { document.getElementById('edit-' + id).classList.toggle('hide'); }
+
+  async function saveDetails(id) {
+    const patch = { name: val('ed-name-' + id), subcategory: val('ed-sub-' + id), description: val('ed-desc-' + id) };
+    if (!patch.name) return toast('Name cannot be empty', true);
+    try { await patchProduct(id, patch); toast('Details saved'); loadProducts(); }
     catch (e) { toast(e.message, true); }
   }
   async function toggleFlag(id, flag, next) {
@@ -399,7 +432,7 @@
     const el = document.getElementById('orders-list');
     el.innerHTML = '<div class="loading">Loading orders…</div>';
     try {
-      const res = await fetch(`${API}/admin/orders`, { headers: authHeaders() });
+      const res = requireAuth(await fetch(`${API}/admin/orders`, { headers: authHeaders() }));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       const orders = data.orders || [];

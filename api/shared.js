@@ -1,5 +1,6 @@
 'use strict';
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const SUPA_URL     = process.env.SUPABASE_URL;
 const SUPA_ANON    = process.env.SUPABASE_ANON_KEY;
@@ -83,6 +84,49 @@ async function uploadProductImage({ filename, contentBase64, contentType }) {
   return data.publicUrl;
 }
 
+// ── Admin auth — password login → short-lived signed session token ───────────
+// The service key never reaches the browser. Sessions are HMAC-signed with a
+// server-only secret (ADMIN_SESSION_SECRET, falling back to the service key).
+function adminSecret() {
+  return process.env.ADMIN_SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY || '';
+}
+
+function timingEqual(a, b) {
+  const ba = Buffer.from(String(a)), bb = Buffer.from(String(b));
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+function checkAdminPassword(pw) {
+  const real = process.env.ADMIN_PASSWORD || '';
+  if (!real || !pw) return false;
+  return timingEqual(pw, real);
+}
+
+function signAdminSession(ttlMs = 12 * 60 * 60 * 1000) {
+  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + ttlMs })).toString('base64url');
+  const sig = crypto.createHmac('sha256', adminSecret()).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifyAdminSession(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return false;
+  const [payload, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', adminSecret()).update(payload).digest('base64url');
+  if (!timingEqual(sig, expected)) return false;
+  try {
+    const { exp } = JSON.parse(Buffer.from(payload, 'base64url').toString());
+    return typeof exp === 'number' && Date.now() < exp;
+  } catch { return false; }
+}
+
+// Authorized = valid session token OR the raw service key (programmatic/back-compat)
+function isAdminAuthorized(token) {
+  if (!token) return false;
+  if (process.env.SUPABASE_SERVICE_KEY && timingEqual(token, process.env.SUPABASE_SERVICE_KEY)) return true;
+  return verifyAdminSession(token);
+}
+
 // Decrement stock atomically after confirmed payment
 async function decrementStock(lines) {
   for (const line of lines) {
@@ -121,4 +165,4 @@ function orderConfirmHtml({ order_ref, buyer_name, total }) {
 </body></html>`;
 }
 
-module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET };
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminPassword, signAdminSession, isAdminAuthorized };
