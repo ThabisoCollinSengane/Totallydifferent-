@@ -13,7 +13,7 @@ Module._load = function (req, parent, isMain) {
     return { createClient: () => ({}) };
   return _orig(req, parent, isMain);
 };
-const { calcShipping, orderConfirmHtml, checkAdminPassword, signAdminSession, isAdminAuthorized } = require('../api/shared');
+const { calcShipping, orderConfirmHtml, checkAdminCredentials, signAdminSession, isAdminAuthorized } = require('../api/shared');
 Module._load = _orig; // restore immediately — only needed for this require
 
 describe('calcShipping', () => {
@@ -53,15 +53,23 @@ describe('order ref format', () => {
 });
 
 describe('admin auth', () => {
-  test('checkAdminPassword matches the configured password', () => {
+  test('checkAdminCredentials matches the configured username + password', () => {
+    process.env.ADMIN_USERNAME = 'thabiso';
     process.env.ADMIN_PASSWORD = 'correct horse';
-    assert.equal(checkAdminPassword('correct horse'), true);
-    assert.equal(checkAdminPassword('wrong'), false);
-    assert.equal(checkAdminPassword(''), false);
+    assert.equal(checkAdminCredentials('thabiso', 'correct horse'), true);
+    assert.equal(checkAdminCredentials('thabiso', 'wrong'), false);
+    assert.equal(checkAdminCredentials('someone', 'correct horse'), false);
+    assert.equal(checkAdminCredentials('', ''), false);
   });
-  test('checkAdminPassword is false when unconfigured', () => {
+  test('checkAdminCredentials defaults the username to "admin"', () => {
+    delete process.env.ADMIN_USERNAME;
+    process.env.ADMIN_PASSWORD = 'pw';
+    assert.equal(checkAdminCredentials('admin', 'pw'), true);
+    assert.equal(checkAdminCredentials('thabiso', 'pw'), false);
+  });
+  test('checkAdminCredentials is false when no password is configured', () => {
     delete process.env.ADMIN_PASSWORD;
-    assert.equal(checkAdminPassword('anything'), false);
+    assert.equal(checkAdminCredentials('admin', 'anything'), false);
   });
   test('a freshly signed session is authorized', () => {
     process.env.ADMIN_SESSION_SECRET = 'sign-secret';

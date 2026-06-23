@@ -108,6 +108,11 @@
     }
 
     try {
+      // Finalize the payment: verify with Paystack, mark paid, decrement stock,
+      // send the email. Idempotent and safe to call on refresh. We don't fail the
+      // page if this errors — the Paystack webhook is the backstop.
+      try { await fetch(`${API}/checkout/confirm?ref=${encodeURIComponent(ref)}`); } catch (_) {}
+
       const res = await fetch(`${API}/orders/${encodeURIComponent(ref)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Order not found');
