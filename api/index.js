@@ -12,7 +12,7 @@
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, PAYSTACK_SECRET } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, sendEmail, orderConfirmHtml, PAYSTACK_SECRET } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
@@ -65,10 +65,10 @@ module.exports = async (req, res) => {
 
   // ── PAYMENT ENGINE — init ──────────────────────────────────
   if (url === '/checkout/init' && req.method === 'POST') {
-    if (!PAYSTACK_SECRET) return json(res, 503, { error: 'Payments not enabled' });
     const { items, buyer_name, buyer_email, buyer_phone, shipping_address } = req.body || {};
     if (!items?.length || !buyer_name || !buyer_email)
       return json(res, 400, { error: 'items, buyer_name, buyer_email required' });
+    if (!PAYSTACK_SECRET) return json(res, 503, { error: 'Payments not enabled' });
 
     let computed;
     try { computed = await recomputeTotal(items); }
@@ -139,7 +139,14 @@ module.exports = async (req, res) => {
       .eq('order_ref', ref).eq('status', 'pending')
       .select().single();
 
-    if (confirmed) await decrementStock(order.items);
+    if (confirmed) {
+      await decrementStock(order.items);
+      sendEmail({
+        to: order.buyer_email,
+        subject: `Order Confirmed — ${ref}`,
+        html: orderConfirmHtml(order),
+      }).catch(() => {});
+    }
 
     return json(res, 200, { success: true, order_ref: ref, total: order.total });
   }
@@ -172,7 +179,14 @@ module.exports = async (req, res) => {
       const { data: confirmed } = await sb().from('orders')
         .update({ status: 'paid', paystack_ref: ref })
         .eq('order_ref', ref).eq('status', 'pending').select().single();
-      if (confirmed) await decrementStock(order.items);
+      if (confirmed) {
+        await decrementStock(order.items);
+        sendEmail({
+          to: order.buyer_email,
+          subject: `Order Confirmed — ${ref}`,
+          html: orderConfirmHtml(order),
+        }).catch(() => {});
+      }
     }
     return;
   }
