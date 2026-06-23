@@ -12,7 +12,7 @@
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminPassword, signAdminSession, isAdminAuthorized } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
@@ -192,9 +192,16 @@ module.exports = async (req, res) => {
   }
 
   // ── ADMIN ENGINE ───────────────────────────────────────────
-  // All admin routes require Authorization: Bearer <service_role_key>
+  // Password login → short-lived signed session token. The service key is
+  // also accepted as a bearer for programmatic use (back-compat).
+  if (url === '/admin/login' && req.method === 'POST') {
+    if (!process.env.ADMIN_PASSWORD) return json(res, 503, { error: 'Admin login not configured' });
+    if (!checkAdminPassword((req.body || {}).password)) return json(res, 401, { error: 'Invalid password' });
+    return json(res, 200, { token: signAdminSession(), expires_in: 12 * 60 * 60 });
+  }
+
   const adminToken = (req.headers.authorization || '').replace('Bearer ', '');
-  if (url.startsWith('/admin') && adminToken !== process.env.SUPABASE_SERVICE_KEY)
+  if (url.startsWith('/admin') && !isAdminAuthorized(adminToken))
     return json(res, 401, { error: 'Unauthorized' });
 
   if (url === '/admin/products' && req.method === 'GET') {

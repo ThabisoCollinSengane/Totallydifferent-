@@ -13,7 +13,7 @@ Module._load = function (req, parent, isMain) {
     return { createClient: () => ({}) };
   return _orig(req, parent, isMain);
 };
-const { calcShipping, orderConfirmHtml } = require('../api/shared');
+const { calcShipping, orderConfirmHtml, checkAdminPassword, signAdminSession, isAdminAuthorized } = require('../api/shared');
 Module._load = _orig; // restore immediately — only needed for this require
 
 describe('calcShipping', () => {
@@ -49,6 +49,39 @@ describe('order ref format', () => {
   test('matches TD-{timestamp}-{3chars} pattern', () => {
     const ref = `TD-${Date.now()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
     assert.match(ref, /^TD-\d+-[A-Z0-9]{3}$/);
+  });
+});
+
+describe('admin auth', () => {
+  test('checkAdminPassword matches the configured password', () => {
+    process.env.ADMIN_PASSWORD = 'correct horse';
+    assert.equal(checkAdminPassword('correct horse'), true);
+    assert.equal(checkAdminPassword('wrong'), false);
+    assert.equal(checkAdminPassword(''), false);
+  });
+  test('checkAdminPassword is false when unconfigured', () => {
+    delete process.env.ADMIN_PASSWORD;
+    assert.equal(checkAdminPassword('anything'), false);
+  });
+  test('a freshly signed session is authorized', () => {
+    process.env.ADMIN_SESSION_SECRET = 'sign-secret';
+    assert.equal(isAdminAuthorized(signAdminSession()), true);
+  });
+  test('expired sessions are rejected', () => {
+    process.env.ADMIN_SESSION_SECRET = 'sign-secret';
+    assert.equal(isAdminAuthorized(signAdminSession(-1000)), false);
+  });
+  test('tampered tokens and junk are rejected', () => {
+    process.env.ADMIN_SESSION_SECRET = 'sign-secret';
+    const tok = signAdminSession();
+    assert.equal(isAdminAuthorized(tok.slice(0, -3) + 'aaa'), false);
+    assert.equal(isAdminAuthorized('not-a-token'), false);
+    assert.equal(isAdminAuthorized(''), false);
+  });
+  test('the service key is accepted as a bearer (back-compat)', () => {
+    process.env.SUPABASE_SERVICE_KEY = 'svc-key-123';
+    assert.equal(isAdminAuthorized('svc-key-123'), true);
+    assert.equal(isAdminAuthorized('svc-key-999'), false);
   });
 });
 
