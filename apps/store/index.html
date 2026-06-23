@@ -364,7 +364,7 @@
   }
 
   function productCardHTML(p) {
-    const variants = p.variants || [];
+    const variants = p.product_variants || p.variants || [];
     const firstVariant = variants[0];
     const imgHtml = (p.images && p.images[0])
       ? `<img src="${escHtml(p.images[0])}" alt="${escHtml(p.name)}" loading="lazy">`
