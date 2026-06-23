@@ -1,0 +1,10 @@
+{
+  "name": "totallydifferent",
+  "version": "1.0.0",
+  "description": "Totallydifferent — premium clothing & hair e-commerce",
+  "main": "api/index.js",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
