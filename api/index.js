@@ -12,7 +12,7 @@
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, sendEmail, orderConfirmHtml, PAYSTACK_SECRET } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
@@ -212,6 +212,67 @@ module.exports = async (req, res) => {
       .select().single();
     if (error) return json(res, 400, { error: error.message });
     return json(res, 201, { product: data });
+  }
+
+  // Update an existing product (images, price, flags, copy)
+  const adminProductId = url.match(/^\/admin\/products\/([^/]+)$/)?.[1];
+  if (adminProductId && req.method === 'PATCH') {
+    const allowed = ['name','description','category','subcategory','base_price','images','is_active','is_featured'];
+    const patch = {};
+    for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
+    if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });
+    const { data, error } = await sb().from('products')
+      .update(patch).eq('id', adminProductId).select('*, product_variants(*)').single();
+    if (error || !data) return json(res, 404, { error: error?.message || 'Product not found' });
+    return json(res, 200, { product: data });
+  }
+
+  // Upload an image to the product-images bucket → returns a public URL
+  if (url === '/admin/upload' && req.method === 'POST') {
+    const { filename, content_base64, content_type } = req.body || {};
+    if (!content_base64 || !content_type)
+      return json(res, 400, { error: 'content_base64 and content_type required' });
+    try {
+      const imageUrl = await uploadProductImage({
+        filename: filename || 'upload.jpg', contentBase64: content_base64, contentType: content_type,
+      });
+      return json(res, 201, { url: imageUrl });
+    } catch (e) {
+      return json(res, 400, { error: e.message });
+    }
+  }
+
+  // Create a product variant
+  if (url === '/admin/variants' && req.method === 'POST') {
+    const { product_id, label, size, colour, volume, price_override, stock, sku } = req.body || {};
+    if (!product_id || !label || !sku)
+      return json(res, 400, { error: 'product_id, label, sku required' });
+    const { data, error } = await sb().from('product_variants')
+      .insert({ product_id, label, size: size || null, colour: colour || null, volume: volume || null,
+                price_override: price_override ?? null, stock: stock ?? 0, sku })
+      .select().single();
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 201, { variant: data });
+  }
+
+  // Update a variant (stock / price)
+  const adminVariantId = url.match(/^\/admin\/variants\/([^/]+)$/)?.[1];
+  if (adminVariantId && req.method === 'PATCH') {
+    const patch = {};
+    for (const k of ['label','stock','price_override','sku']) if (k in (req.body || {})) patch[k] = req.body[k];
+    if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });
+    const { data, error } = await sb().from('product_variants')
+      .update(patch).eq('id', adminVariantId).select().single();
+    if (error || !data) return json(res, 404, { error: error?.message || 'Variant not found' });
+    return json(res, 200, { variant: data });
+  }
+
+  // List orders (newest first)
+  if (url === '/admin/orders' && req.method === 'GET') {
+    const { data, error } = await sb().from('orders')
+      .select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 200, { orders: data });
   }
 
   const adminOrderRef = url.match(/^\/admin\/orders\/([^/]+)$/)?.[1];

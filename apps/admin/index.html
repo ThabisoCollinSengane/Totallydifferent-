@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totallydifferent — Admin</title>
+<meta name="robots" content="noindex">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a; --white: #fafafa; --gold: #c8a96e; --gold-light: #e8c98a;
+    --grey: #888; --grey-light: #f2f0ed; --grey-border: #e0ddd8; --red: #c0392b;
+    --green: #27ae60; --radius: 4px; --font: 'Georgia', serif;
+    --font-sans: system-ui, -apple-system, sans-serif; --trans: 0.2s ease;
+  }
+  body { font-family: var(--font-sans); background: var(--grey-light); color: var(--black); min-height: 100vh; }
+
+  header {
+    background: var(--black); color: var(--white); display: flex; align-items: center;
+    justify-content: space-between; padding: 0 24px; height: 60px; position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font); font-size: 20px; letter-spacing: 0.05em; color: var(--white); text-decoration: none; }
+  .logo span { color: var(--gold); }
+  .header-right { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+  .ghost-btn { background: none; border: 1px solid #333; color: var(--white); padding: 7px 14px; border-radius: var(--radius); cursor: pointer; font-size: 13px; }
+  .ghost-btn:hover { border-color: var(--gold); }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* AUTH GATE */
+  .gate { max-width: 440px; margin: 80px auto; background: var(--white); border: 1px solid var(--grey-border); border-radius: var(--radius); padding: 32px; }
+  .gate h1 { font-family: var(--font); font-weight: 400; font-size: 24px; margin-bottom: 8px; }
+  .gate p { color: var(--grey); font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+  .warn { background: #fff8e6; border: 1px solid #f0d98a; color: #8a6d1a; font-size: 12px; padding: 10px 12px; border-radius: var(--radius); margin-bottom: 18px; line-height: 1.5; }
+
+  label { display: block; font-size: 11px; letter-spacing: 0.06em; color: var(--grey); margin-bottom: 6px; text-transform: uppercase; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--grey-border); border-radius: var(--radius);
+    font-size: 14px; font-family: var(--font-sans); background: var(--white); color: var(--black);
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .btn { background: var(--black); color: var(--white); border: none; padding: 11px 18px; border-radius: var(--radius); cursor: pointer; font-size: 13px; letter-spacing: 0.04em; transition: background var(--trans); }
+  .btn:hover { background: #222; }
+  .btn:disabled { background: var(--grey); cursor: not-allowed; }
+  .btn-gold { background: var(--gold); color: var(--black); }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-danger { background: none; border: 1px solid var(--grey-border); color: var(--red); }
+  .btn-danger:hover { border-color: var(--red); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab { padding: 9px 20px; border: 1px solid var(--grey-border); background: var(--white); border-radius: var(--radius); cursor: pointer; font-size: 13px; }
+  .tab.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card { background: var(--white); border: 1px solid var(--grey-border); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; }
+  .card h2 { font-family: var(--font); font-weight: 400; font-size: 17px; margin-bottom: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field { margin-bottom: 12px; }
+
+  /* PRODUCT ROW */
+  .product { display: flex; gap: 16px; align-items: flex-start; }
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb { width: 70px; height: 88px; border-radius: 3px; overflow: hidden; position: relative; background: var(--grey-light); border: 1px solid var(--grey-border); flex-shrink: 0; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .x { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,.6); color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; font-size: 11px; line-height: 1; }
+  .thumb-empty { display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--grey-border); }
+  .pinfo { flex: 1; min-width: 0; }
+  .pname { font-family: var(--font); font-size: 16px; }
+  .pmeta { font-size: 12px; color: var(--grey); margin: 2px 0 10px; }
+  .badge { display: inline-block; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; background: var(--grey-light); color: var(--grey); margin-left: 6px; }
+  .badge.on { background: #e7f6ee; color: var(--green); }
+  .badge.off { background: #fdecea; color: var(--red); }
+  .badge.feat { background: #f6efe0; color: var(--gold); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+
+  .variants { margin-top: 12px; border-top: 1px solid var(--grey-border); padding-top: 10px; }
+  .variant { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 0; flex-wrap: wrap; }
+  .variant .vlabel { min-width: 130px; }
+  .variant input { width: 90px; padding: 5px 8px; }
+  .muted { color: var(--grey); font-size: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--grey-border); }
+  th { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--grey); }
+  .status-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; text-transform: capitalize; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--black); color: #fff; padding: 12px 22px; border-radius: 24px; font-size: 13px; z-index: 100; transition: transform .3s ease; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.err { background: var(--red); }
+  .loading { text-align: center; padding: 40px; color: var(--grey); }
+  .hide { display: none !important; }
+  .uploading { opacity: .5; pointer-events: none; }
+  @media (max-width: 640px) { .row, .row-3 { grid-template-columns: 1fr; } .product { flex-direction: column; } }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/admin">Totally<span>different</span> · Admin</a>
+  <div class="header-right">
+    <a class="logo" href="/" style="font-size:13px;color:var(--grey)">View store ↗</a>
+    <button class="ghost-btn hide" id="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<!-- AUTH GATE -->
+<div class="gate" id="gate">
+  <h1>Admin access</h1>
+  <p>Enter the Supabase <strong>service-role key</strong> to manage products and orders.</p>
+  <div class="warn">⚠ This key has full database access. Only enter it on a device you trust. It is kept in this tab's memory only (sessionStorage) and is never saved to the site.</div>
+  <div class="field">
+    <label>Service-role key</label>
+    <input type="password" id="key-input" placeholder="eyJhbGciOi…" autocomplete="off">
+  </div>
+  <button class="btn btn-gold" style="width:100%" onclick="signIn()">Unlock dashboard</button>
+  <p id="gate-err" class="muted" style="color:var(--red);margin-top:12px"></p>
+</div>
+
+<!-- DASHBOARD -->
+<div class="wrap hide" id="dash">
+  <div class="tabs">
+    <button class="tab active" data-tab="products" onclick="switchTab('products')">Products</button>
+    <button class="tab" data-tab="orders" onclick="switchTab('orders')">Orders</button>
+  </div>
+
+  <!-- PRODUCTS PANEL -->
+  <div class="panel active" id="panel-products">
+    <div class="card">
+      <h2>Add a product</h2>
+      <div class="row">
+        <div><label>Product ID</label><input id="np-id" placeholder="td-beanie-blk"></div>
+        <div><label>Name</label><input id="np-name" placeholder="Knit Beanie"></div>
+      </div>
+      <div class="row row-3">
+        <div><label>Category</label>
+          <select id="np-cat"><option value="clothing">clothing</option><option value="hair">hair</option></select>
+        </div>
+        <div><label>Subcategory</label><input id="np-sub" placeholder="accessories"></div>
+        <div><label>Base price (ZAR)</label><input id="np-price" type="number" placeholder="199"></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="np-desc" placeholder="Short product description"></textarea></div>
+      <div class="actions">
+        <label style="display:flex;align-items:center;gap:6px;text-transform:none;font-size:13px;color:var(--black)">
+          <input type="checkbox" id="np-feat" style="width:auto"> Featured
+        </label>
+        <button class="btn" onclick="createProduct()">Create product</button>
+        <span class="muted">Add sizes/volumes after creating.</span>
+      </div>
+    </div>
+
+    <div id="products-list"><div class="loading">Loading products…</div></div>
+  </div>
+
+  <!-- ORDERS PANEL -->
+  <div class="panel" id="panel-orders">
+    <div class="card">
+      <h2>Orders</h2>
+      <div id="orders-list"><div class="loading">Loading orders…</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '/api';
+  const STATUSES = ['pending','paid','packed','shipped','delivered','cancelled'];
+  let KEY = sessionStorage.getItem('td_admin_key') || '';
+  let products = [];
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  function authHeaders(extra) { return Object.assign({ 'Authorization': 'Bearer ' + KEY }, extra || {}); }
+
+  async function signIn() {
+    const val = document.getElementById('key-input').value.trim();
+    if (!val) return;
+    KEY = val;
+    const res = await fetch(`${API}/admin/products`, { headers: authHeaders() });
+    if (res.status === 401) {
+      document.getElementById('gate-err').textContent = 'That key was rejected. Check it and try again.';
+      KEY = '';
+      return;
+    }
+    sessionStorage.setItem('td_admin_key', KEY);
+    showDash();
+  }
+
+  function logout() {
+    sessionStorage.removeItem('td_admin_key');
+    KEY = '';
+    document.getElementById('dash').classList.add('hide');
+    document.getElementById('logout-btn').classList.add('hide');
+    document.getElementById('gate').classList.remove('hide');
+    document.getElementById('key-input').value = '';
+  }
+
+  function showDash() {
+    document.getElementById('gate').classList.add('hide');
+    document.getElementById('dash').classList.remove('hide');
+    document.getElementById('logout-btn').classList.remove('hide');
+    loadProducts();
+    loadOrders();
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
+  }
+
+  // ── Products ────────────────────────────────────────────────────────────────
+  async function loadProducts() {
+    const el = document.getElementById('products-list');
+    el.innerHTML = '<div class="loading">Loading products…</div>';
+    try {
+      const res = await fetch(`${API}/admin/products`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      products = data.products || [];
+      renderProducts();
+    } catch (e) { el.innerHTML = `<div class="loading">${esc(e.message)}</div>`; }
+  }
+
+  function renderProducts() {
+    const el = document.getElementById('products-list');
+    if (!products.length) { el.innerHTML = '<div class="card muted">No products yet.</div>'; return; }
+    el.innerHTML = products.map(p => productCard(p)).join('');
+  }
+
+  function productCard(p) {
+    const imgs = p.images || [];
+    const variants = p.product_variants || [];
+    const placeholder = p.category === 'hair' ? '✨' : '👕';
+    const thumbs = imgs.map((src, i) => `
+      <div class="thumb">
+        <img src="${esc(src)}" alt="">
+        <button class="x" title="Remove" onclick="removeImage('${p.id}', ${i})">✕</button>
+      </div>`).join('') || `<div class="thumb thumb-empty">${placeholder}</div>`;
+
+    const variantRows = variants.map(v => `
+      <div class="variant">
+        <span class="vlabel">${esc(v.label)}</span>
+        <span class="muted">${esc(v.sku || '')}</span>
+        <label style="margin:0">Stock</label>
+        <input type="number" value="${v.stock ?? 0}" id="vstock-${v.id}">
+        <button class="btn btn-sm" onclick="saveVariant('${v.id}')">Save</button>
+      </div>`).join('') || '<div class="muted">No variants yet — product can\'t be purchased until you add one.</div>';
+
+    return `
+      <div class="card" id="pcard-${p.id}">
+        <div class="product">
+          <div>
+            <div class="thumbs">${thumbs}</div>
+            <div style="margin-top:8px">
+              <input type="file" accept="image/*" multiple id="file-${p.id}" class="hide" onchange="uploadImages('${p.id}', this)">
+              <button class="btn btn-sm" onclick="document.getElementById('file-${p.id}').click()">＋ Upload image</button>
+            </div>
+          </div>
+          <div class="pinfo">
+            <div class="pname">${esc(p.name)}
+              ${p.is_active ? '<span class="badge on">active</span>' : '<span class="badge off">hidden</span>'}
+              ${p.is_featured ? '<span class="badge feat">featured</span>' : ''}
+            </div>
+            <div class="pmeta">${esc(p.id)} · ${esc(p.category)}${p.subcategory ? ' / ' + esc(p.subcategory) : ''}</div>
+            <div class="actions">
+              <label style="margin:0">Price R</label>
+              <input type="number" value="${p.base_price}" id="price-${p.id}" style="width:100px">
+              <button class="btn btn-sm" onclick="savePrice('${p.id}')">Save price</button>
+              <button class="btn btn-sm" onclick="toggleFlag('${p.id}','is_featured',${!p.is_featured})">${p.is_featured ? 'Unfeature' : 'Feature'}</button>
+              <button class="btn btn-sm btn-danger" onclick="toggleFlag('${p.id}','is_active',${!p.is_active})">${p.is_active ? 'Hide' : 'Show'}</button>
+            </div>
+            <div class="variants">
+              ${variantRows}
+              <div class="variant" style="margin-top:8px">
+                <input placeholder="Label e.g. M / Black" id="nv-label-${p.id}" style="width:160px">
+                <input placeholder="SKU" id="nv-sku-${p.id}" style="width:120px">
+                <input placeholder="Stock" type="number" id="nv-stock-${p.id}" style="width:80px">
+                <button class="btn btn-sm" onclick="addVariant('${p.id}')">＋ Add variant</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function createProduct() {
+    const body = {
+      id: val('np-id'), name: val('np-name'), category: val('np-cat'),
+      subcategory: val('np-sub'), base_price: parseFloat(val('np-price')),
+      description: val('np-desc'), is_featured: document.getElementById('np-feat').checked,
+    };
+    if (!body.id || !body.name || isNaN(body.base_price)) return toast('ID, name and price are required', true);
+    const res = await fetch(`${API}/admin/products`, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) return toast(data.error || 'Create failed', true);
+    ['np-id','np-name','np-sub','np-price','np-desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('np-feat').checked = false;
+    toast('Product created');
+    loadProducts();
+  }
+
+  async function patchProduct(id, patch) {
+    const res = await fetch(`${API}/admin/products/${encodeURIComponent(id)}`, {
+      method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(patch),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Update failed');
+    return data.product;
+  }
+
+  async function savePrice(id) {
+    try { await patchProduct(id, { base_price: parseFloat(val('price-' + id)) }); toast('Price updated'); loadProducts(); }
+    catch (e) { toast(e.message, true); }
+  }
+  async function toggleFlag(id, flag, next) {
+    try { await patchProduct(id, { [flag]: next }); toast('Updated'); loadProducts(); }
+    catch (e) { toast(e.message, true); }
+  }
+
+  async function removeImage(id, idx) {
+    const p = products.find(x => x.id === id);
+    const images = (p.images || []).filter((_, i) => i !== idx);
+    try { await patchProduct(id, { images }); toast('Image removed'); loadProducts(); }
+    catch (e) { toast(e.message, true); }
+  }
+
+  // Resize in-browser before upload to stay well under the serverless body limit
+  function resizeToDataUrl(file, max) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > max) { height = Math.round(height * max / width); width = max; }
+        const c = document.createElement('canvas'); c.width = width; c.height = height;
+        c.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function uploadImages(id, input) {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    if (!files.length) return;
+    const card = document.getElementById('pcard-' + id);
+    card.classList.add('uploading');
+    try {
+      const p = products.find(x => x.id === id);
+      const urls = (p.images || []).slice();
+      for (const file of files) {
+        const dataUrl = await resizeToDataUrl(file, 1200);
+        const base64 = dataUrl.split(',')[1];
+        const res = await fetch(`${API}/admin/upload`, {
+          method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ filename: file.name, content_type: 'image/jpeg', content_base64: base64 }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        urls.push(data.url);
+      }
+      await patchProduct(id, { images: urls });
+      toast(`${files.length} image${files.length > 1 ? 's' : ''} uploaded`);
+      loadProducts();
+    } catch (e) { toast(e.message, true); card.classList.remove('uploading'); }
+  }
+
+  async function addVariant(id) {
+    const label = val('nv-label-' + id), sku = val('nv-sku-' + id), stock = parseInt(val('nv-stock-' + id) || '0', 10);
+    if (!label || !sku) return toast('Variant label and SKU are required', true);
+    const res = await fetch(`${API}/admin/variants`, {
+      method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ product_id: id, label, sku, stock }),
+    });
+    const data = await res.json();
+    if (!res.ok) return toast(data.error || 'Add failed', true);
+    toast('Variant added'); loadProducts();
+  }
+
+  async function saveVariant(vid) {
+    const stock = parseInt(val('vstock-' + vid) || '0', 10);
+    const res = await fetch(`${API}/admin/variants/${vid}`, {
+      method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ stock }),
+    });
+    const data = await res.json();
+    if (!res.ok) return toast(data.error || 'Save failed', true);
+    toast('Stock saved');
+  }
+
+  // ── Orders ────────────────────────────────────────────────────────────────
+  async function loadOrders() {
+    const el = document.getElementById('orders-list');
+    el.innerHTML = '<div class="loading">Loading orders…</div>';
+    try {
+      const res = await fetch(`${API}/admin/orders`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      const orders = data.orders || [];
+      if (!orders.length) { el.innerHTML = '<div class="muted">No orders yet.</div>'; return; }
+      el.innerHTML = `
+        <table>
+          <thead><tr><th>Ref</th><th>Buyer</th><th>Total</th><th>Status</th><th>Placed</th></tr></thead>
+          <tbody>${orders.map(o => `
+            <tr>
+              <td><strong>${esc(o.order_ref)}</strong></td>
+              <td>${esc(o.buyer_name)}<br><span class="muted">${esc(o.buyer_email)}</span></td>
+              <td>R${Number(o.total).toFixed(2)}</td>
+              <td>
+                <select onchange="updateOrder('${esc(o.order_ref)}', this.value)">
+                  ${STATUSES.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </td>
+              <td class="muted">${o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+    } catch (e) { el.innerHTML = `<div class="loading">${esc(e.message)}</div>`; }
+  }
+
+  async function updateOrder(ref, status) {
+    const res = await fetch(`${API}/admin/orders/${encodeURIComponent(ref)}`, {
+      method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ status }),
+    });
+    const data = await res.json();
+    if (!res.ok) return toast(data.error || 'Update failed', true);
+    toast(`Order ${ref} → ${status}`);
+  }
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+  function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ''; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  let toastTimer;
+  function toast(msg, isErr) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  document.getElementById('key-input').addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); });
+  if (KEY) showDash();
+</script>
+</body>
+</html>
