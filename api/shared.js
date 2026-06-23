@@ -75,4 +75,35 @@ async function decrementStock(lines) {
   }
 }
 
-module.exports = { sb, recomputeTotal, verifyPaystackTx, decrementStock, PAYSTACK_SECRET };
+// Communication Engine — Resend email, fire-and-forget
+// Never awaited in the order flow — email errors must never block a confirmed order.
+async function sendEmail({ to, subject, html }) {
+  const key  = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM || 'Totallydifferent <hello@totallydifferent.co.za>';
+  if (!key) return;
+  const https = require('https');
+  const body  = JSON.stringify({ from, to: [to], subject, html });
+  await new Promise(resolve => {
+    const r = https.request({
+      hostname: 'api.resend.com', path: '/emails', method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json',
+                 'Content-Length': Buffer.byteLength(body) },
+    }, res => { res.resume(); res.on('end', resolve); });
+    r.on('error', resolve); // swallow — never block
+    r.write(body); r.end();
+  });
+}
+
+function orderConfirmHtml({ order_ref, buyer_name, total }) {
+  return `<!DOCTYPE html><html><body style="font-family:sans-serif;color:#111;max-width:600px;margin:auto;padding:24px">
+<h2 style="font-size:22px;font-weight:700;margin-bottom:4px">Order Confirmed</h2>
+<p style="color:#555;margin-top:0">Reference: <strong>${order_ref}</strong></p>
+<p>Hi ${buyer_name}, your order has been confirmed and payment received.</p>
+<p style="font-size:20px;font-weight:700">Total: R${Number(total).toFixed(2)}</p>
+<p>We'll notify you when your order is packed and on its way.</p>
+<hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+<p style="color:#aaa;font-size:12px">Totallydifferent — Premium Clothing &amp; Hair &bull; South Africa</p>
+</body></html>`;
+}
+
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, sendEmail, orderConfirmHtml, PAYSTACK_SECRET };

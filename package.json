@@ -4,6 +4,9 @@
   "description": "Totallydifferent — premium clothing & hair e-commerce",
   "main": "api/index.js",
   "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test tests/unit.test.js tests/api.test.js"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
   }
