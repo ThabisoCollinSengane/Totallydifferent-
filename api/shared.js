@@ -97,10 +97,14 @@ function timingEqual(a, b) {
   return crypto.timingSafeEqual(ba, bb);
 }
 
-function checkAdminPassword(pw) {
-  const real = process.env.ADMIN_PASSWORD || '';
-  if (!real || !pw) return false;
-  return timingEqual(pw, real);
+function checkAdminCredentials(username, password) {
+  const u = process.env.ADMIN_USERNAME || 'admin';
+  const p = process.env.ADMIN_PASSWORD || '';
+  if (!p || !username || !password) return false;
+  // evaluate both to keep timing roughly constant
+  const okUser = timingEqual(username, u);
+  const okPass = timingEqual(password, p);
+  return okUser && okPass;
 }
 
 function signAdminSession(ttlMs = 12 * 60 * 60 * 1000) {
@@ -165,4 +169,4 @@ function orderConfirmHtml({ order_ref, buyer_name, total }) {
 </body></html>`;
 }
 
-module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminPassword, signAdminSession, isAdminAuthorized };
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized };

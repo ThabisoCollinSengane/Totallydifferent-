@@ -229,6 +229,79 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* NAV */
+  .main-nav { display: flex; gap: 22px; }
+  .nav-link { font-size: 13px; color: var(--black); text-decoration: none; letter-spacing: 0.04em; padding: 4px 0; border-bottom: 1px solid transparent; transition: border-color var(--trans); }
+  .nav-link:hover { border-color: var(--gold); }
+
+  /* PRODUCT DETAIL (PDP) */
+  body.no-scroll { overflow: hidden; }
+  .pdp-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; opacity: 0; pointer-events: none; transition: opacity var(--trans); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .pdp-overlay.open { opacity: 1; pointer-events: all; }
+  .pdp { background: var(--white); max-width: 1080px; margin: 40px auto; border-radius: var(--radius); position: relative; transform: translateY(20px); transition: transform 0.3s ease; }
+  .pdp-overlay.open .pdp { transform: translateY(0); }
+  .pdp-close { position: absolute; top: 14px; right: 14px; z-index: 2; background: var(--white); border: 1px solid var(--grey-border); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1; }
+  .pdp-close:hover { border-color: var(--black); }
+  .pdp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 32px; }
+  .pdp-main { width: 100%; aspect-ratio: 3/4; background: var(--grey-light); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .pdp-main img { width: 100%; height: 100%; object-fit: cover; }
+  .pdp-main .ph { font-size: 72px; color: var(--grey-border); }
+  .pdp-thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .pdp-thumb { width: 60px; height: 76px; border-radius: 3px; overflow: hidden; border: 1px solid var(--grey-border); cursor: pointer; opacity: 0.55; transition: opacity var(--trans), border-color var(--trans); background: var(--grey-light); }
+  .pdp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .pdp-thumb.active { opacity: 1; border-color: var(--black); }
+  .pdp-cat { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); margin-bottom: 8px; }
+  .pdp-name { font-family: var(--font); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
+  .pdp-price { font-size: 22px; color: var(--gold); font-weight: 600; margin-bottom: 16px; }
+  .pdp-desc { font-size: 14px; line-height: 1.65; color: #444; margin-bottom: 22px; }
+  .pdp-section-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey); margin-bottom: 8px; }
+  .pdp-variants { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .pdp-qty-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .pdp-qty { display: flex; align-items: center; border: 1px solid var(--grey-border); border-radius: var(--radius); }
+  .pdp-qty button { width: 38px; height: 38px; background: none; border: none; cursor: pointer; font-size: 18px; }
+  .pdp-qty button:hover { color: var(--gold); }
+  .pdp-qty span { min-width: 34px; text-align: center; font-size: 14px; }
+  .pdp-stock { font-size: 13px; }
+  .pdp-stock.in { color: #27ae60; } .pdp-stock.low { color: #d68910; } .pdp-stock.out { color: var(--red); }
+  .pdp-add { width: 100%; padding: 15px; background: var(--black); color: var(--white); border: none; cursor: pointer; font-size: 14px; letter-spacing: 0.06em; border-radius: var(--radius); transition: background var(--trans); }
+  .pdp-add:hover { background: #222; } .pdp-add:disabled { background: var(--grey); cursor: not-allowed; }
+  .pdp-add.added { background: var(--gold); color: var(--black); animation: addPop 0.4s ease; }
+  .pdp-similar { border-top: 1px solid var(--grey-border); padding: 28px 32px 36px; }
+  .pdp-similar h3 { font-family: var(--font); font-weight: 400; font-size: 20px; margin-bottom: 18px; }
+  .similar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .similar-card { cursor: pointer; }
+  .similar-card .simg { width: 100%; aspect-ratio: 3/4; background: var(--grey-light); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .similar-card .simg img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+  .similar-card:hover .simg img { transform: scale(1.05); }
+  .similar-card .ph { font-size: 34px; color: var(--grey-border); }
+  .similar-card .sname { font-size: 13px; margin-top: 8px; }
+  .similar-card .sprice { font-size: 13px; color: var(--gold); font-weight: 600; }
+
+  /* ABOUT */
+  .about { background: var(--grey-light); padding: 64px 24px; }
+  .about-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+  .about h2 { font-family: var(--font); font-weight: 400; font-size: 30px; margin-bottom: 18px; }
+  .about p { font-size: 16px; line-height: 1.8; color: #444; }
+  .about .sig { margin-top: 18px; font-family: var(--font); color: var(--gold); letter-spacing: 0.04em; font-size: 14px; }
+
+  /* FAQ */
+  .faq { max-width: 760px; margin: 0 auto; padding: 64px 24px; }
+  .faq h2 { font-family: var(--font); font-weight: 400; font-size: 30px; margin-bottom: 24px; text-align: center; }
+  .faq-item { border-bottom: 1px solid var(--grey-border); }
+  .faq-q { width: 100%; background: none; border: none; text-align: left; padding: 18px 0; font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; color: var(--black); font-family: var(--font-sans); }
+  .faq-q .ico { color: var(--gold); font-size: 22px; transition: transform var(--trans); flex-shrink: 0; line-height: 1; }
+  .faq-item.open .faq-q .ico { transform: rotate(45deg); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .faq-a p { padding: 0 0 18px; font-size: 14px; line-height: 1.7; color: #555; }
+
+  @media (max-width: 720px) {
+    .main-nav { display: none; }
+    .pdp-grid { grid-template-columns: 1fr; gap: 20px; padding: 20px; }
+    .pdp { margin: 0; min-height: 100vh; border-radius: 0; }
+    .pdp-similar { padding: 24px 20px 32px; }
+    .similar-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
   /* FOOTER */
   footer {
     background: var(--black); color: var(--grey); text-align: center;
@@ -251,6 +324,11 @@
 <header>
   <a class="logo" href="/">Totally<span>different</span></a>
   <div class="header-right">
+    <nav class="main-nav">
+      <a href="#shop" class="nav-link">Shop</a>
+      <a href="#about" class="nav-link">About</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+    </nav>
     <button class="cart-btn" onclick="openCart()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
@@ -275,17 +353,64 @@
   <button class="filter-btn" onclick="filterProducts('hair', this)">Hair</button>
 </div>
 
-<main class="products-section">
+<main class="products-section" id="shop">
   <div class="products-grid" id="products-grid">
     <div class="loading">Loading products…</div>
   </div>
 </main>
+
+<section class="about" id="about">
+  <div class="about-inner">
+    <h2>Totally Different</h2>
+    <p>Totally Different was born in Durban in 2024, out of a simple frustration: too much of what we wore — and what we put in our hair — felt exactly the same. So we set out to make the opposite. Every piece in our range, from heavyweight tees and utility outerwear to our curl creams and scalp oils, is designed and tested right here at home, for our climate and our people. Premium materials, honest pricing, and a fit that actually feels like you. Not louder — just totally different.</p>
+    <p class="sig">— Totally Different · Durban, South Africa · since 2024</p>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <h2>Frequently Asked Questions</h2>
+  <div id="faq-list"></div>
+</section>
 
 <footer>
   <div class="footer-logo">Totallydifferent</div>
   <p>South African premium clothing &amp; hair. &copy; 2025</p>
   <p style="margin-top:8px">Questions? <a href="mailto:hello@totallydifferent.co.za">hello@totallydifferent.co.za</a></p>
 </footer>
+
+<!-- Product Detail (PDP) -->
+<div class="pdp-overlay" id="pdp-overlay" onclick="if(event.target===this) closeProduct()">
+  <div class="pdp">
+    <button class="pdp-close" onclick="closeProduct()" aria-label="Close">✕</button>
+    <div class="pdp-grid">
+      <div class="pdp-gallery">
+        <div class="pdp-main" id="pdp-main"></div>
+        <div class="pdp-thumbs" id="pdp-thumbs"></div>
+      </div>
+      <div class="pdp-details">
+        <div class="pdp-cat" id="pdp-cat"></div>
+        <h1 class="pdp-name" id="pdp-name"></h1>
+        <div class="pdp-price" id="pdp-price"></div>
+        <p class="pdp-desc" id="pdp-desc"></p>
+        <div class="pdp-section-label" id="pdp-opt-label">Select an option</div>
+        <div class="pdp-variants" id="pdp-variants"></div>
+        <div class="pdp-qty-row">
+          <div class="pdp-qty">
+            <button onclick="pdpChangeQty(-1)" aria-label="Decrease quantity">−</button>
+            <span id="pdp-qty">1</span>
+            <button onclick="pdpChangeQty(1)" aria-label="Increase quantity">+</button>
+          </div>
+          <div class="pdp-stock" id="pdp-stock"></div>
+        </div>
+        <button class="pdp-add" id="pdp-add" onclick="pdpAddToBag()">Add to Bag</button>
+      </div>
+    </div>
+    <div class="pdp-similar" id="pdp-similar" style="display:none">
+      <h3>You may also like</h3>
+      <div class="similar-grid" id="similar-grid"></div>
+    </div>
+  </div>
+</div>
 
 <!-- Cart Drawer -->
 <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
@@ -338,25 +463,27 @@
 
 <script>
   const API = '/api';
-  let allProducts = [];
+  let catalog = [];          // every product, fetched once
   let currentCategory = 'all';
   let cart = JSON.parse(localStorage.getItem('td_cart') || '[]');
   let serverTotals = null;
 
+  const variantsOf = p => p.product_variants || p.variants || [];
+  const priceOf = (p, v) => (v && v.price_override != null) ? v.price_override : p.base_price;
+  const byId = id => catalog.find(p => p.id === id);
+
   // ── Products ──────────────────────────────────────────────────────────────
 
-  async function loadProducts(category) {
+  async function loadProducts() {
     const grid = document.getElementById('products-grid');
     grid.innerHTML = '<div class="loading">Loading products…</div>';
     try {
-      const url = category && category !== 'all'
-        ? `${API}/products?category=${category}`
-        : `${API}/products`;
-      const res = await fetch(url);
+      const res = await fetch(`${API}/products`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
-      allProducts = data.products || [];
-      renderProducts(allProducts);
+      catalog = data.products || [];
+      renderGrid();
+      maybeOpenFromUrl();
     } catch (e) {
       grid.innerHTML = `<div class="empty"><h3>Couldn't load products</h3><p>${e.message}</p></div>`;
     }
@@ -366,16 +493,17 @@
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentCategory = cat;
-    loadProducts(cat === 'all' ? null : cat);
+    renderGrid();
   }
 
-  function renderProducts(products) {
+  function renderGrid() {
     const grid = document.getElementById('products-grid');
-    if (!products.length) {
+    const list = currentCategory === 'all' ? catalog : catalog.filter(p => p.category === currentCategory);
+    if (!list.length) {
       grid.innerHTML = '<div class="empty"><h3>Nothing here yet</h3><p>Check back soon.</p></div>';
       return;
     }
-    grid.innerHTML = products.map((p, i) => productCardHTML(p, i)).join('');
+    grid.innerHTML = list.map((p, i) => productCardHTML(p, i)).join('');
   }
 
   function productCardHTML(p, index = 0) {
@@ -407,12 +535,12 @@
 
     return `
       <div class="product-card" id="card-${p.id}" style="animation-delay:${delay}s">
-        <div class="product-img">
+        <div class="product-img" style="cursor:pointer" onclick="openProduct('${p.id}')">
           ${imgHtml}
           <span class="product-cat-badge">${p.category}</span>
         </div>
         <div class="product-info">
-          <div class="product-name">${escHtml(p.name)}</div>
+          <div class="product-name" style="cursor:pointer" onclick="openProduct('${p.id}')">${escHtml(p.name)}</div>
           <div class="product-price" id="price-${p.id}">R${price.toFixed(2)}</div>
           <div class="product-variants">${variantChips}</div>
           <button class="add-btn" id="add-${p.id}" onclick="addToCart('${p.id}')" disabled>
@@ -445,7 +573,7 @@
     const selected = card.querySelector('.variant-chip.selected');
     if (!selected) return;
 
-    const product = allProducts.find(p => p.id === productId);
+    const product = byId(productId);
     const variantId = selected.dataset.variantId;
     const existing = cart.find(i => i.variant_id === variantId);
 
@@ -478,17 +606,20 @@
     }, 1500);
   }
 
-  // Animate a thumbnail flying from the product card into the bag button
   function flyToCart(card, product) {
+    flyFromEl(card.querySelector('.product-img img'), product);
+  }
+
+  // Animate an image flying from an element into the bag button
+  function flyFromEl(imgEl, product) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!product.images || !product.images[0]) return;
-    const imgEl = card.querySelector('.product-img img');
+    const src = (product.images && product.images[0]) || (imgEl && imgEl.src);
     const cartBtn = document.querySelector('.cart-btn');
-    if (!imgEl || !cartBtn) return;
+    if (!imgEl || !src || !cartBtn) return;
     const from = imgEl.getBoundingClientRect();
     const to = cartBtn.getBoundingClientRect();
     const fly = document.createElement('img');
-    fly.src = product.images[0];
+    fly.src = src;
     fly.className = 'fly-img';
     fly.style.left = from.left + 'px';
     fly.style.top = from.top + 'px';
@@ -496,6 +627,159 @@
       `translate(${to.left + to.width / 2 - from.left - 30}px, ${to.top + to.height / 2 - from.top - 38}px)`);
     document.body.appendChild(fly);
     fly.addEventListener('animationend', () => fly.remove());
+  }
+
+  // ── Product detail (PDP) ───────────────────────────────────────────────────
+
+  let pdpProduct = null, pdpVariantId = null, pdpQty = 1, pdpImg = 0;
+
+  function openProduct(id, push = true) {
+    const p = byId(id);
+    if (!p) return;
+    pdpProduct = p; pdpImg = 0; pdpQty = 1;
+    const vs = variantsOf(p);
+    const firstAvail = vs.find(v => v.stock > 0) || vs[0] || null;
+    pdpVariantId = firstAvail ? firstAvail.id : null;
+    renderPDP();
+    const ov = document.getElementById('pdp-overlay');
+    ov.classList.add('open');
+    ov.scrollTop = 0;
+    document.body.classList.add('no-scroll');
+    if (push) history.pushState({ product: id }, '', `?product=${encodeURIComponent(id)}`);
+  }
+
+  function closeProduct() {
+    if (new URLSearchParams(location.search).get('product')) {
+      history.pushState({}, '', location.pathname); // drop ?product= without a reload
+    }
+    hidePDP();
+  }
+
+  function hidePDP() {
+    document.getElementById('pdp-overlay').classList.remove('open');
+    document.body.classList.remove('no-scroll');
+    pdpProduct = null;
+  }
+
+  function renderPDP() {
+    const p = pdpProduct; if (!p) return;
+    const vs = variantsOf(p);
+    const imgs = p.images || [];
+
+    const main = document.getElementById('pdp-main');
+    main.innerHTML = imgs.length
+      ? `<img src="${escHtml(imgs[pdpImg] || imgs[0])}" alt="${escHtml(p.name)}">`
+      : `<div class="ph">${p.category === 'hair' ? '✨' : '👕'}</div>`;
+
+    document.getElementById('pdp-thumbs').innerHTML = imgs.length > 1
+      ? imgs.map((src, i) => `<div class="pdp-thumb ${i === pdpImg ? 'active' : ''}" onclick="pdpSetImg(${i})"><img src="${escHtml(src)}" alt=""></div>`).join('')
+      : '';
+
+    document.getElementById('pdp-cat').textContent = p.category + (p.subcategory ? ' · ' + p.subcategory : '');
+    document.getElementById('pdp-name').textContent = p.name;
+    document.getElementById('pdp-desc').textContent = p.description || '';
+
+    const isHair = p.category === 'hair';
+    document.getElementById('pdp-opt-label').textContent = isHair ? 'Select size' : 'Select option';
+    document.getElementById('pdp-variants').innerHTML = vs.length
+      ? vs.map(v => `<button class="variant-chip ${v.id === pdpVariantId ? 'selected' : ''} ${v.stock === 0 ? 'out-of-stock' : ''}" ${v.stock === 0 ? 'disabled' : ''} onclick="pdpSelectVariant('${v.id}')">${escHtml(v.label)}</button>`).join('')
+      : '<span class="pdp-stock out">Currently unavailable</span>';
+
+    updatePdpPriceStock();
+    renderSimilar(p);
+  }
+
+  function pdpSetImg(i) { pdpImg = i; renderPDP(); }
+  function pdpSelectVariant(id) { pdpVariantId = id; pdpQty = 1; renderPDP(); }
+
+  function pdpChangeQty(d) {
+    const v = variantsOf(pdpProduct).find(x => x.id === pdpVariantId);
+    const max = v ? v.stock : 1;
+    pdpQty = Math.min(Math.max(1, pdpQty + d), Math.max(1, max));
+    document.getElementById('pdp-qty').textContent = pdpQty;
+  }
+
+  function updatePdpPriceStock() {
+    const p = pdpProduct;
+    const v = variantsOf(p).find(x => x.id === pdpVariantId);
+    document.getElementById('pdp-price').textContent = 'R' + priceOf(p, v).toFixed(2);
+    document.getElementById('pdp-qty').textContent = pdpQty;
+    const stockEl = document.getElementById('pdp-stock');
+    const addBtn = document.getElementById('pdp-add');
+    addBtn.className = 'pdp-add';
+    if (!v) { stockEl.textContent = ''; stockEl.className = 'pdp-stock'; addBtn.disabled = true; addBtn.textContent = 'Unavailable'; return; }
+    if (v.stock === 0) { stockEl.textContent = 'Out of stock'; stockEl.className = 'pdp-stock out'; addBtn.disabled = true; addBtn.textContent = 'Out of stock'; }
+    else if (v.stock <= 5) { stockEl.textContent = `Only ${v.stock} left`; stockEl.className = 'pdp-stock low'; addBtn.disabled = false; addBtn.textContent = 'Add to Bag'; }
+    else { stockEl.textContent = 'In stock'; stockEl.className = 'pdp-stock in'; addBtn.disabled = false; addBtn.textContent = 'Add to Bag'; }
+  }
+
+  function pdpAddToBag() {
+    const p = pdpProduct;
+    const v = variantsOf(p).find(x => x.id === pdpVariantId);
+    if (!v || v.stock === 0) return;
+    const existing = cart.find(i => i.variant_id === v.id);
+    if (existing) existing.quantity += pdpQty;
+    else cart.push({
+      variant_id: v.id, product_id: p.id, product_name: p.name, variant_label: v.label,
+      unit_price: priceOf(p, v), images: p.images || [], quantity: pdpQty,
+    });
+    saveCart();
+    updateCartUI();
+    showToast(`${p.name} added to bag`);
+    flyFromEl(document.querySelector('#pdp-main img'), p);
+    bumpCart();
+    const addBtn = document.getElementById('pdp-add');
+    addBtn.textContent = '✓ Added to bag';
+    addBtn.className = 'pdp-add added';
+    setTimeout(updatePdpPriceStock, 1400);
+  }
+
+  // Same subcategory first, then fill from the same category
+  function renderSimilar(p) {
+    const sameSub = catalog.filter(x => x.id !== p.id && x.subcategory && x.subcategory === p.subcategory);
+    const sameCat = catalog.filter(x => x.id !== p.id && x.category === p.category && !sameSub.includes(x));
+    const items = [...sameSub, ...sameCat].slice(0, 4);
+    const wrap = document.getElementById('pdp-similar');
+    if (!items.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    document.getElementById('similar-grid').innerHTML = items.map(s => {
+      const price = priceOf(s, variantsOf(s)[0]);
+      const img = (s.images && s.images[0])
+        ? `<img src="${escHtml(s.images[0])}" alt="${escHtml(s.name)}" loading="lazy">`
+        : `<div class="ph">${s.category === 'hair' ? '✨' : '👕'}</div>`;
+      return `<div class="similar-card" onclick="openProduct('${s.id}')"><div class="simg">${img}</div><div class="sname">${escHtml(s.name)}</div><div class="sprice">R${price.toFixed(2)}</div></div>`;
+    }).join('');
+  }
+
+  function maybeOpenFromUrl() {
+    const id = new URLSearchParams(location.search).get('product');
+    if (id && byId(id)) openProduct(id, false);
+  }
+
+  // ── FAQ ────────────────────────────────────────────────────────────────────
+
+  const FAQS = [
+    { q: 'How long does delivery take?', a: 'We deliver nationwide across South Africa, typically within 2–5 business days. Orders over R750 ship free; otherwise a flat R80 delivery fee applies. You\'ll get a confirmation email with your order reference as soon as your payment clears.' },
+    { q: 'What payment methods do you accept?', a: 'All payments are processed securely by Paystack in South African Rand (ZAR). You can pay by debit/credit card, instant EFT, and other Paystack-supported methods. Your card details are entered on Paystack\'s secure page — we never see or store them.' },
+    { q: 'What is your returns policy?', a: 'All sales are final — we don\'t offer returns or refunds for change of mind, so please double-check your size and option before checking out. If an item arrives faulty or incorrect, you\'re protected under the Consumer Protection Act: email us within 7 days and we\'ll make it right.' },
+    { q: 'How do I choose the right size?', a: 'Our clothing fits true to size with a relaxed, modern cut — tees and hoodies are designed slightly oversized. If you\'re between sizes or unsure, email us your measurements before you buy and we\'ll point you to the right fit.' },
+    { q: 'How do I use the hair products?', a: 'Each product page lists its size and a short description. As a guide: work curl cream through damp hair and scrunch, massage scalp and nourish oils into a clean scalp, and use treatment masks weekly. A little goes a long way.' },
+    { q: 'Can I track my order?', a: 'Yes — keep the order reference from your confirmation page or email. You can look it up at any time, and we\'ll email you again once your order is packed and on its way.' },
+  ];
+
+  function renderFAQ() {
+    document.getElementById('faq-list').innerHTML = FAQS.map((f, i) => `
+      <div class="faq-item" id="faq-${i}">
+        <button class="faq-q" onclick="toggleFaq(${i})"><span>${escHtml(f.q)}</span><span class="ico">+</span></button>
+        <div class="faq-a" id="faqa-${i}"><p>${escHtml(f.a)}</p></div>
+      </div>`).join('');
+  }
+
+  function toggleFaq(i) {
+    const item = document.getElementById('faq-' + i);
+    const a = document.getElementById('faqa-' + i);
+    const open = item.classList.toggle('open');
+    a.style.maxHeight = open ? a.scrollHeight + 'px' : '0';
   }
 
   function bumpCart() {
@@ -700,7 +984,22 @@
 
   // ── Boot ──────────────────────────────────────────────────────────────────
 
+  // Back/forward button drives the product overlay
+  window.addEventListener('popstate', () => {
+    const id = new URLSearchParams(location.search).get('product');
+    if (id) openProduct(id, false); else hidePDP();
+  });
+
+  // Escape closes the topmost layer
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('checkout-modal').classList.contains('open')) return closeCheckout();
+    if (document.getElementById('pdp-overlay').classList.contains('open')) return closeProduct();
+    if (document.getElementById('cart-drawer').classList.contains('open')) return closeCart();
+  });
+
   updateCartUI();
+  renderFAQ();
   loadProducts();
 </script>
 </body>

@@ -113,7 +113,11 @@
 <!-- AUTH GATE -->
 <div class="gate" id="gate">
   <h1>Admin access</h1>
-  <p>Sign in with your admin password to manage products and orders.</p>
+  <p>Sign in with your username and password to manage products and orders.</p>
+  <div class="field">
+    <label>Username</label>
+    <input type="text" id="user-input" placeholder="username" autocomplete="username" autocapitalize="none" spellcheck="false">
+  </div>
   <div class="field">
     <label>Password</label>
     <input type="password" id="key-input" placeholder="••••••••" autocomplete="current-password">
@@ -179,20 +183,21 @@
   function authHeaders(extra) { return Object.assign({ 'Authorization': 'Bearer ' + KEY }, extra || {}); }
 
   async function signIn() {
+    const username = document.getElementById('user-input').value.trim();
     const pw = document.getElementById('key-input').value;
     const err = document.getElementById('gate-err');
     const btn = document.getElementById('signin-btn');
     err.textContent = '';
-    if (!pw) return;
+    if (!username || !pw) { err.textContent = 'Enter your username and password.'; return; }
     btn.disabled = true; btn.textContent = 'Signing in…';
     try {
       const res = await fetch(`${API}/admin/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password: pw }),
       });
       const data = await res.json();
       if (!res.ok) { err.textContent = data.error === 'Admin login not configured'
-        ? 'Admin login is not configured yet — set ADMIN_PASSWORD in Vercel.'
-        : 'Incorrect password. Try again.'; return; }
+        ? 'Admin login is not configured yet — set ADMIN_USERNAME and ADMIN_PASSWORD in Vercel.'
+        : 'Incorrect username or password. Try again.'; return; }
       KEY = data.token;
       sessionStorage.setItem('td_admin_token', KEY);
       document.getElementById('key-input').value = '';
@@ -477,7 +482,8 @@
   }
 
   // ── Boot ──────────────────────────────────────────────────────────────────
-  document.getElementById('key-input').addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); });
+  ['user-input', 'key-input'].forEach(id =>
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); }));
   if (KEY) showDash();
 </script>
 </body>

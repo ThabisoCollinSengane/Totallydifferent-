@@ -12,7 +12,7 @@
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminPassword, signAdminSession, isAdminAuthorized } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
@@ -196,7 +196,8 @@ module.exports = async (req, res) => {
   // also accepted as a bearer for programmatic use (back-compat).
   if (url === '/admin/login' && req.method === 'POST') {
     if (!process.env.ADMIN_PASSWORD) return json(res, 503, { error: 'Admin login not configured' });
-    if (!checkAdminPassword((req.body || {}).password)) return json(res, 401, { error: 'Invalid password' });
+    const { username, password } = req.body || {};
+    if (!checkAdminCredentials(username, password)) return json(res, 401, { error: 'Invalid username or password' });
     return json(res, 200, { token: signAdminSession(), expires_in: 12 * 60 * 60 });
   }
 
