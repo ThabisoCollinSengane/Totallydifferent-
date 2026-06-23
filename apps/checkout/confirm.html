@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed — Totallydifferent</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a; --white: #fafafa; --gold: #c8a96e;
+    --grey: #888; --grey-light: #f2f0ed; --grey-border: #e0ddd8;
+    --green: #27ae60; --red: #c0392b;
+    --font: 'Georgia', serif; --font-sans: system-ui, -apple-system, sans-serif;
+  }
+  body { font-family: var(--font-sans); background: var(--white); color: var(--black); min-height: 100vh; display: flex; flex-direction: column; }
+  header {
+    border-bottom: 1px solid var(--grey-border); display: flex; align-items: center;
+    padding: 0 24px; height: 60px;
+  }
+  .logo { font-family: var(--font); font-size: 20px; letter-spacing: 0.05em; color: var(--black); text-decoration: none; }
+  .logo span { color: var(--gold); }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+  .card {
+    max-width: 480px; width: 100%; background: var(--white);
+    border: 1px solid var(--grey-border); border-radius: 4px; padding: 40px;
+    text-align: center;
+  }
+  .icon { font-size: 48px; margin-bottom: 16px; }
+  .card h1 { font-family: var(--font); font-size: 26px; font-weight: 400; margin-bottom: 8px; }
+  .card .sub { color: var(--grey); font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+  .order-ref {
+    background: var(--grey-light); border-radius: 4px; padding: 14px 20px;
+    font-family: monospace; font-size: 16px; letter-spacing: 0.06em;
+    margin-bottom: 24px; color: var(--black);
+  }
+  .order-ref small { display: block; font-size: 11px; color: var(--grey); margin-bottom: 4px; font-family: var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; }
+  .order-details { text-align: left; border: 1px solid var(--grey-border); border-radius: 4px; overflow: hidden; margin-bottom: 28px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--grey-border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .label { color: var(--grey); }
+  .detail-row .val { font-weight: 500; }
+  .status-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px;
+    font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .status-paid { background: #e8f8ee; color: var(--green); }
+  .status-pending { background: #fff8e8; color: #c8960e; }
+  .items-list { text-align: left; margin-bottom: 24px; }
+  .items-title { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey); margin-bottom: 10px; }
+  .order-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid var(--grey-border); }
+  .order-item:last-child { border-bottom: none; }
+  .order-item-name { color: var(--black); }
+  .order-item-price { color: var(--gold); font-weight: 500; }
+  .total-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; padding-top: 10px; }
+  .shop-btn {
+    display: inline-block; padding: 13px 32px; background: var(--gold); color: var(--black);
+    text-decoration: none; font-size: 14px; letter-spacing: 0.06em; font-weight: 600;
+    border-radius: 4px; transition: background 0.2s;
+  }
+  .shop-btn:hover { background: #e8c98a; }
+  .loading { color: var(--grey); font-size: 14px; padding: 20px 0; }
+  .error-card { color: var(--red); }
+  footer {
+    background: var(--black); color: var(--grey); text-align: center;
+    padding: 24px; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">Totally<span>different</span></a>
+</header>
+
+<main>
+  <div class="card" id="card">
+    <div class="loading">Loading your order…</div>
+  </div>
+</main>
+
+<footer>Totallydifferent &copy; 2025 · South African premium clothing &amp; hair</footer>
+
+<script>
+  const API = '/api';
+
+  function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function statusBadge(status) {
+    const cls = status === 'paid' ? 'status-paid' : 'status-pending';
+    return `<span class="status-badge ${cls}">${escHtml(status)}</span>`;
+  }
+
+  async function loadOrder() {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || params.get('order_ref');
+    const card = document.getElementById('card');
+
+    if (!ref) {
+      card.innerHTML = `
+        <div class="icon">❌</div>
+        <h1 class="error-card">No order reference</h1>
+        <p class="sub">We couldn't find your order. Please check your email or contact us.</p>
+        <a class="shop-btn" href="/" style="margin-top:8px">Back to Shop</a>
+      `;
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/orders/${encodeURIComponent(ref)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Order not found');
+
+      const order = data.order;
+      const items = order.items || [];
+      const isPaid = order.status === 'paid';
+
+      card.innerHTML = `
+        <div class="icon">${isPaid ? '🎉' : '⏳'}</div>
+        <h1>${isPaid ? 'Order Confirmed!' : 'Payment Pending'}</h1>
+        <p class="sub">
+          ${isPaid
+            ? `Thank you, ${escHtml(order.buyer_name?.split(' ')[0] || 'there')}! Your order is confirmed and will be packed soon.`
+            : 'Your payment is being verified. You will receive an email confirmation shortly.'}
+        </p>
+        <div class="order-ref">
+          <small>Order Reference</small>
+          ${escHtml(order.order_ref)}
+        </div>
+        <div class="order-details">
+          <div class="detail-row">
+            <span class="label">Status</span>
+            <span class="val">${statusBadge(order.status)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Name</span>
+            <span class="val">${escHtml(order.buyer_name)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Email</span>
+            <span class="val">${escHtml(order.buyer_email)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Delivery to</span>
+            <span class="val" style="max-width:60%;text-align:right">${escHtml(order.shipping_address)}</span>
+          </div>
+        </div>
+        <div class="items-list">
+          <div class="items-title">Items Ordered</div>
+          ${items.map(i => `
+            <div class="order-item">
+              <span class="order-item-name">${escHtml(i.product_name || 'Item')} × ${i.quantity} <small style="color:#888">${escHtml(i.variant_label || '')}</small></span>
+              <span class="order-item-price">R${(i.line_total || 0).toFixed(2)}</span>
+            </div>
+          `).join('')}
+          <div class="order-item">
+            <span class="order-item-name" style="color:#888">Delivery</span>
+            <span class="order-item-price" style="color:#888">${(order.shipping_fee || 0) === 0 ? 'FREE' : `R${(order.shipping_fee).toFixed(2)}`}</span>
+          </div>
+          <div class="total-row">
+            <span>Total Paid</span>
+            <span style="color:var(--gold)">R${(order.total || 0).toFixed(2)}</span>
+          </div>
+        </div>
+        <a class="shop-btn" href="/">Continue Shopping</a>
+      `;
+    } catch (e) {
+      card.innerHTML = `
+        <div class="icon">❌</div>
+        <h1 class="error-card">Order not found</h1>
+        <p class="sub">${escHtml(e.message)}</p>
+        <a class="shop-btn" href="/" style="margin-top:8px">Back to Shop</a>
+      `;
+    }
+  }
+
+  loadOrder();
+</script>
+</body>
+</html>
