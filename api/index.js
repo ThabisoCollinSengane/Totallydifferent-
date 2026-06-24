@@ -12,14 +12,14 @@
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, captureError } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
   res.status(status).json(body);
 }
 
-module.exports = async (req, res) => {
+const handler = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -303,4 +303,14 @@ module.exports = async (req, res) => {
   }
 
   return json(res, 404, { error: 'Not found' });
+};
+
+// Top-level guard: capture any unhandled error and return a clean 500.
+module.exports = async (req, res) => {
+  try {
+    return await handler(req, res);
+  } catch (err) {
+    captureError(err, { method: req.method, url: req.url });
+    if (!res.headersSent) return json(res, 500, { error: 'Internal server error' });
+  }
 };
