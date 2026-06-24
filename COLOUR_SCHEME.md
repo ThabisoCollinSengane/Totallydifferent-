@@ -37,7 +37,7 @@ dial back toward lighter smoked colours:
 
 | Tab | Original light matte | Light **smoked** matte | Current dark smoked |
 |---|---|---|---|
-| All (orange/ember) | `#f0dcc2` | `#ddbd97` | **`#1c1712`** |
+| All (now **matte maroon**) | `#f0dcc2` | `#ddbd97` | **`#2a141a`** (deep) / `#4a2630` (hero band) |
 | Clothing (ocean blue) | `#cddfe4` | `#a6c2ca` | **`#121f1e`** |
 | Hair (red/ember) | `#eccdc6` | `#d3aaa0` | **`#1e120f`** |
 
@@ -67,11 +67,15 @@ brand pages, and drives `--theme-bg / --theme-accent / --theme-text`.)
 
 ### b) Hero band — `:root` var + `.hero` (~lines 24 & 67)
 ```css
---matte-black: #2a2a2a;            /* hero band only — soft "light matte black" */
+--maroon: #4a2630;                 /* matte maroon — light shaded (hero band) */
+--maroon-deep: #2a141a;            /* matte maroon — dark shaded (All tab base) */
+--matte-black: var(--maroon);      /* hero band is now a light-shaded matte maroon, not black */
 .hero { background: var(--matte-black); color: var(--white); }
 ```
-`--black: #0a0a0a` is intentionally still used for header/buttons/footer/active
-filter — only the hero uses `--matte-black`.
+The **main theme is matte maroon**: the hero band uses the lighter shade
+(`--maroon`) and the "All" tab + its smoke haze derive from the darker shade
+(`--primary-bg: #2a141a`). `--black: #0a0a0a` is still used for
+header/buttons/footer/active filter only.
 
 ### c) The "burning smoke" effect — `.products-section.themed::before` (~lines 366–383)
 Animated, blurred radial-gradient haze tinted by `--theme-accent`, drifting via
