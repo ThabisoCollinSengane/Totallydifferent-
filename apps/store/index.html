@@ -302,15 +302,20 @@
     .similar-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
-  /* BRAND GRID */
+  /* BRAND GRID — logo tiles on each brand's theme colour */
   .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-  .brand-card { position: relative; aspect-ratio: 4/5; border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--grey-light); opacity: 0; animation: cardIn 0.45s ease forwards; }
-  .brand-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-  .brand-card:hover img { transform: scale(1.05); }
-  .brand-card .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.74), rgba(0,0,0,0.05) 55%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
-  .brand-card .b-name { font-family: var(--font); font-size: 24px; color: #fff; letter-spacing: 0.04em; }
-  .brand-card .b-tag { color: #eee; font-size: 13px; margin-top: 2px; }
-  .brand-card .b-count { color: #ccc; font-size: 11px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .brand-card { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; opacity: 0; animation: cardIn 0.45s ease forwards; transition: transform var(--trans), box-shadow var(--trans); }
+  .brand-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.18); }
+  .brand-card.logo-card { aspect-ratio: 4/5; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); border: 1px solid color-mix(in srgb, var(--theme-text) 16%, transparent); }
+  .brand-card.logo-card.glow { box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-accent) 45%, transparent), 0 0 28px color-mix(in srgb, var(--theme-accent) 30%, transparent); }
+  .brand-card.logo-card.glow:hover { box-shadow: 0 0 0 1px var(--theme-accent), 0 0 38px color-mix(in srgb, var(--theme-accent) 45%, transparent); }
+  .bl-logo-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; min-height: 0; }
+  .bl-logo { max-width: 84%; max-height: 84%; object-fit: contain; transition: transform 0.5s ease; }
+  .brand-card:hover .bl-logo { transform: scale(1.05); }
+  .bl-meta { padding: 0 20px 22px; text-align: center; }
+  .bl-meta .b-name { font-family: var(--font); font-size: 21px; letter-spacing: 0.04em; color: var(--theme-text); }
+  .bl-meta .b-tag { font-size: 13px; margin-top: 2px; color: var(--theme-text); opacity: 0.78; }
+  .bl-meta .b-count { font-size: 11px; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--theme-accent); }
 
   /* THEMED SHOP (brand / hair) */
   .products-section.themed { background: var(--theme-bg); color: var(--theme-text); margin: 0; padding: 32px 24px 64px; max-width: none; }
@@ -645,12 +650,14 @@
     const delay = Math.min(i, 9) * 0.06;
     const count = catalog.filter(p => p.brand_id === b.id).length;
     const label = b.gender && b.gender !== 'unisex' ? `${b.name} · ${b.gender}` : b.name;
-    const img = b.hero_image ? `<img src="${escHtml(b.hero_image)}" alt="${escHtml(label)}" loading="lazy">` : '';
-    return `<div class="brand-card" style="animation-delay:${delay}s" onclick="openBrand('${b.id}')">
-      ${img}<div class="overlay">
+    const logo = b.logo_image ? `<img class="bl-logo" src="${escHtml(b.logo_image)}" alt="${escHtml(label)}" loading="lazy">` : '';
+    const countTxt = count ? `${count} ${count === 1 ? 'piece' : 'pieces'} · Shop ›` : 'Dropping soon';
+    return `<div class="brand-card logo-card ${b.glow ? 'glow' : ''}" style="--theme-bg:${escHtml(b.theme_bg || '#0a0a0a')};--theme-accent:${escHtml(b.theme_accent || '#c8a96e')};--theme-text:${escHtml(b.theme_text || '#fafafa')};animation-delay:${delay}s" onclick="openBrand('${b.id}')">
+      <div class="bl-logo-wrap">${logo}</div>
+      <div class="bl-meta">
         <div class="b-name">${escHtml(label)}</div>
         <div class="b-tag">${escHtml(b.tagline || '')}</div>
-        <div class="b-count">${count} ${count === 1 ? 'piece' : 'pieces'}</div>
+        <div class="b-count">${escHtml(countTxt)}</div>
       </div></div>`;
   }
 
