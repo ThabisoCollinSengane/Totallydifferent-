@@ -335,10 +335,15 @@
   .banner-back { background: none; border: none; color: inherit; cursor: pointer; font-size: 13px; opacity: 0.8; margin-bottom: 14px; padding: 0; }
   .banner-back:hover { opacity: 1; }
   .banner-inner { display: flex; gap: 20px; align-items: center; }
-  .banner-logo { width: 84px; height: 84px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.06); padding: 6px; flex-shrink: 0; }
+  /* lifestyle hero photo behind the brand intro */
+  .banner-hero.has-hero { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 300px; padding: 28px; display: flex; align-items: flex-end; background-size: cover; background-position: center 18%; }
+  .banner-hero.has-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--theme-bg) 94%, transparent), color-mix(in srgb, var(--theme-bg) 45%, transparent) 55%, color-mix(in srgb, var(--theme-bg) 12%, transparent)); }
+  .banner-hero.has-hero .banner-inner { position: relative; z-index: 1; }
+  .banner-logo { width: 84px; height: 84px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.10); padding: 6px; flex-shrink: 0; }
   .banner-tag { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-accent); margin-bottom: 4px; }
   .banner-name { font-family: var(--font); font-weight: 400; font-size: 30px; letter-spacing: 0.04em; }
-  .banner-story { font-size: 14px; line-height: 1.65; max-width: 640px; margin-top: 8px; opacity: 0.85; }
+  .banner-story { font-size: 14px; line-height: 1.65; max-width: 640px; margin-top: 8px; opacity: 0.9; }
+  @media (max-width: 560px) { .banner-hero.has-hero { min-height: 360px; } .banner-inner { flex-direction: column; align-items: flex-start; gap: 12px; } }
 
   /* HAIR SPECS (PDP) — Alibaba listing style */
   .pdp-specs { margin: 4px 0 22px; }
@@ -407,12 +412,14 @@
   <!-- Themed banner for a brand or the hair category -->
   <div class="theme-banner" id="theme-banner" style="display:none">
     <button class="banner-back" onclick="backToBrands()">‹ All brands</button>
-    <div class="banner-inner">
-      <img class="banner-logo" id="banner-logo" alt="" style="display:none">
-      <div>
-        <div class="banner-tag" id="banner-tag"></div>
-        <h2 class="banner-name" id="banner-name"></h2>
-        <p class="banner-story" id="banner-story"></p>
+    <div class="banner-hero" id="banner-hero">
+      <div class="banner-inner">
+        <img class="banner-logo" id="banner-logo" alt="" style="display:none">
+        <div>
+          <div class="banner-tag" id="banner-tag"></div>
+          <h2 class="banner-name" id="banner-name"></h2>
+          <p class="banner-story" id="banner-story"></p>
+        </div>
       </div>
     </div>
   </div>
@@ -586,7 +593,9 @@
   function showAll(push) {
     currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearTheme();
     elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
-    renderList(catalog);
+    // Clothing first, hair last
+    const ordered = [...catalog].sort((a, b) => (a.category === 'hair' ? 1 : 0) - (b.category === 'hair' ? 1 : 0));
+    renderList(ordered);
     if (push) pushView('');
   }
 
@@ -604,6 +613,8 @@
     applyTheme('#efd9dd', '#b06a7c', '#2a2024', false);
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
+    const hero = document.getElementById('banner-hero');
+    hero.classList.remove('has-hero'); hero.style.backgroundImage = '';
     document.getElementById('banner-logo').style.display = 'none';
     document.querySelector('.banner-back').style.display = 'none';
     document.getElementById('banner-tag').textContent = 'Hair';
@@ -621,6 +632,9 @@
     applyTheme(b.theme_bg || '#0a0a0a', b.theme_accent || '#c8a96e', b.theme_text || '#fafafa', b.glow);
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
+    const hero = document.getElementById('banner-hero');
+    if (b.hero_image) { hero.classList.add('has-hero'); hero.style.backgroundImage = `url("${b.hero_image}")`; }
+    else { hero.classList.remove('has-hero'); hero.style.backgroundImage = ''; }
     const logo = document.getElementById('banner-logo');
     if (b.logo_image) { logo.src = b.logo_image; logo.style.display = 'block'; } else logo.style.display = 'none';
     document.querySelector('.banner-back').style.display = '';
