@@ -727,7 +727,7 @@
 
   function showAll(push) {
     currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearBrandTimers();
-    applyTheme('#f0dcc2', '#c2772f', '#3b2c1c', false);   // light matte orange
+    applyTheme('#ddbd97', '#9a5a22', '#2e2013', false);   // light smoked matte orange
     elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
     // Clothing first, hair last
     const ordered = [...catalog].sort((a, b) => (a.category === 'hair' ? 1 : 0) - (b.category === 'hair' ? 1 : 0));
@@ -737,7 +737,7 @@
 
   function showBrands(push) {
     currentCategory = 'clothing'; currentBrand = null; setActiveFilter('clothing');
-    applyTheme('#cddfe4', '#2c6a7d', '#173039', false);   // matte ocean blue
+    applyTheme('#a6c2ca', '#225663', '#13272d', false);   // light smoked matte ocean blue
     elBanner().style.display = 'none'; elGrid().style.display = 'none';
     const bg = elBrandGrid(); bg.style.display = 'grid';
     bg.innerHTML = brands.length ? brands.map((b, i) => brandCardHTML(b, i)).join('')
@@ -748,7 +748,7 @@
 
   function showHair(push) {
     currentCategory = 'hair'; currentBrand = null; setActiveFilter('hair'); clearBrandTimers();
-    applyTheme('#eccdc6', '#b23a2e', '#3a1c17', false);   // matte red
+    applyTheme('#d3aaa0', '#993028', '#2e1511', false);   // light smoked matte red
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
     const hero = document.getElementById('banner-hero');
