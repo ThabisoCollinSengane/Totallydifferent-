@@ -362,7 +362,26 @@
   .bl-meta .b-count { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--theme-accent); }
 
   /* THEMED SHOP (brand / hair) */
-  .products-section.themed { background: var(--theme-bg); color: var(--theme-text); margin: 0; padding: 32px 24px 64px; max-width: none; }
+  .products-section.themed { background: var(--theme-bg); color: var(--theme-text); margin: 0; padding: 32px 24px 64px; max-width: none; position: relative; clip-path: inset(0); }
+  /* drifting "burning smoke" haze tinted by the theme — sits behind the content */
+  .products-section.themed::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(closest-side, color-mix(in srgb, var(--theme-accent) 26%, transparent), transparent 72%) 8% 12% / 60% 65% no-repeat,
+      radial-gradient(closest-side, color-mix(in srgb, #fff 14%, transparent), transparent 70%) 78% 30% / 55% 60% no-repeat,
+      radial-gradient(closest-side, color-mix(in srgb, var(--theme-accent) 20%, transparent), transparent 72%) 55% 88% / 72% 72% no-repeat,
+      radial-gradient(closest-side, color-mix(in srgb, #000 24%, transparent), transparent 70%) 30% 70% / 65% 60% no-repeat;
+    filter: blur(34px); opacity: 0.9;
+    animation: smokeDrift 22s ease-in-out infinite alternate;
+  }
+  @keyframes smokeDrift {
+    0%   { transform: translate3d(-4%, 3%, 0) scale(1.02) rotate(0deg); }
+    50%  { transform: translate3d(4%, -3%, 0) scale(1.12) rotate(2deg); }
+    100% { transform: translate3d(-2%, 4%, 0) scale(1.06) rotate(-1deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .products-section.themed::before { animation: none; } }
+  /* keep all real content above the smoke */
+  .products-section.themed > * { position: relative; z-index: 1; }
   .products-section.themed .products-grid { max-width: 1200px; margin: 0 auto; }
   .products-section.themed .product-card { background: color-mix(in srgb, var(--theme-bg) 86%, #fff); border-color: color-mix(in srgb, var(--theme-bg) 66%, #fff); }
   .products-section.themed .product-name { color: var(--theme-text); }
@@ -727,7 +746,7 @@
 
   function showAll(push) {
     currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearBrandTimers();
-    applyTheme('#ddbd97', '#9a5a22', '#2e2013', false);   // light smoked matte orange
+    applyTheme('#1c1712', '#cf9a55', '#ece0d0', false);   // dark smoked ember (All)
     elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
     // Clothing first, hair last
     const ordered = [...catalog].sort((a, b) => (a.category === 'hair' ? 1 : 0) - (b.category === 'hair' ? 1 : 0));
@@ -737,7 +756,7 @@
 
   function showBrands(push) {
     currentCategory = 'clothing'; currentBrand = null; setActiveFilter('clothing');
-    applyTheme('#a6c2ca', '#225663', '#13272d', false);   // light smoked matte ocean blue
+    applyTheme('#121f1e', '#74b2b8', '#dceae9', false);   // dark smoked ocean (Clothing)
     elBanner().style.display = 'none'; elGrid().style.display = 'none';
     const bg = elBrandGrid(); bg.style.display = 'grid';
     bg.innerHTML = brands.length ? brands.map((b, i) => brandCardHTML(b, i)).join('')
@@ -748,7 +767,7 @@
 
   function showHair(push) {
     currentCategory = 'hair'; currentBrand = null; setActiveFilter('hair'); clearBrandTimers();
-    applyTheme('#d3aaa0', '#993028', '#2e1511', false);   // light smoked matte red
+    applyTheme('#1e120f', '#cc6f60', '#f0dcd6', false);   // dark smoked ember-red (Hair)
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
     const hero = document.getElementById('banner-hero');
@@ -850,9 +869,9 @@
         slides[idx].classList.remove('is-active');
         idx = (idx + 1) % slides.length;
         slides[idx].classList.add('is-active');
-        brandTimers.push(setTimeout(tick, idx === 0 ? 5000 : 3000)); // logo lingers 5s
+        brandTimers.push(setTimeout(tick, idx === 0 ? 10000 : 3000)); // logo lingers 10s
       };
-      brandTimers.push(setTimeout(tick, 5000)); // hold the logo first
+      brandTimers.push(setTimeout(tick, 10000)); // hold the logo first for 10s
     });
   }
 
