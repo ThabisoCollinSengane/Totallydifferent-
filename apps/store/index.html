@@ -317,11 +317,11 @@
   .similar-card .sprice { font-size: 13px; color: var(--gold); font-weight: 600; }
 
   /* ABOUT */
-  .about { background: var(--grey-light); padding: 64px 24px; }
-  .about-inner { max-width: 760px; margin: 0 auto; text-align: center; }
-  .about h2 { font-family: var(--font); font-weight: 400; font-size: 30px; margin-bottom: 18px; }
-  .about p { font-size: 16px; line-height: 1.8; color: #444; }
-  .about .sig { margin-top: 18px; font-family: var(--font); color: var(--gold); letter-spacing: 0.04em; font-size: 14px; }
+  .about { background: var(--grey-light); padding: 40px 24px; }
+  .about-inner { max-width: 660px; margin: 0 auto; text-align: center; }
+  .about h2 { font-family: var(--font); font-weight: 400; font-size: 25px; margin-bottom: 12px; }
+  .about p { font-size: 14px; line-height: 1.65; color: #444; }
+  .about .sig { margin-top: 12px; font-family: var(--font); color: var(--gold); letter-spacing: 0.04em; font-size: 13px; }
 
   /* FAQ */
   .faq { max-width: 760px; margin: 0 auto; padding: 64px 24px; }
@@ -399,17 +399,16 @@
 
   .banner-tag { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-accent); }
   .banner-name { font-family: var(--font); font-weight: 400; font-size: 30px; letter-spacing: 0.04em; line-height: 1.12; }
-  .banner-story { font-size: 14px; line-height: 1.65; max-width: 640px; opacity: 0.95; }
+  .banner-story { font-size: 13px; line-height: 1.6; max-width: 720px; margin: 14px auto 4px; opacity: 0.9; text-align: center; }
 
-  /* lifestyle hero photo — now clean, no logo overlaid on the picture */
-  .banner-hero.has-hero { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 280px; padding: 28px; display: flex; align-items: flex-end; background-size: cover; background-position: center 18%; }
-  .banner-hero.has-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--theme-bg) 94%, transparent), color-mix(in srgb, var(--theme-bg) 30%, transparent) 55%, transparent); }
-  .banner-hero.has-hero .banner-inner { position: relative; z-index: 1; }
+  /* lifestyle hero photo — clean image; the story sits below it, not over it */
+  .banner-hero.has-hero { overflow: hidden; border-radius: var(--radius); min-height: 300px; background-size: cover; background-position: center 18%; }
   @media (max-width: 560px) {
     .brand-bar { top: 8px; gap: 12px; padding: 10px 14px; }
     .brand-bar-logo { width: 44px; height: 44px; }
     .brand-bar .banner-name { font-size: 20px; }
-    .banner-hero.has-hero { min-height: 320px; }
+    .banner-hero.has-hero { min-height: 240px; }
+    .banner-story { font-size: 12.5px; text-align: left; }
   }
 
   /* HAIR SPECS (PDP) — Alibaba listing style */
@@ -493,11 +492,8 @@
         <h2 class="banner-name" id="banner-name"></h2>
       </div>
     </div>
-    <div class="banner-hero" id="banner-hero">
-      <div class="banner-inner">
-        <p class="banner-story" id="banner-story"></p>
-      </div>
-    </div>
+    <div class="banner-hero" id="banner-hero"></div>
+    <p class="banner-story" id="banner-story"></p>
   </div>
   <!-- Brand hero cards (Clothing menu) -->
   <div class="brand-grid" id="brand-grid" style="display:none"></div>
