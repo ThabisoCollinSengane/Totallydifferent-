@@ -178,6 +178,7 @@
   const STATUSES = ['pending','paid','packed','shipped','delivered','cancelled'];
   let KEY = sessionStorage.getItem('td_admin_token') || '';
   let products = [];
+  let adminBrands = [];
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   function authHeaders(extra) { return Object.assign({ 'Authorization': 'Bearer ' + KEY }, extra || {}); }
@@ -221,10 +222,11 @@
     document.getElementById('key-input').value = '';
   }
 
-  function showDash() {
+  async function showDash() {
     document.getElementById('gate').classList.add('hide');
     document.getElementById('dash').classList.remove('hide');
     document.getElementById('logout-btn').classList.remove('hide');
+    try { adminBrands = (await (await fetch(`${API}/brands`)).json()).brands || []; } catch { adminBrands = []; }
     loadProducts();
     loadOrders();
   }
@@ -301,6 +303,15 @@
                 <div><label>Name</label><input id="ed-name-${p.id}" value="${esc(p.name)}"></div>
                 <div><label>Subcategory</label><input id="ed-sub-${p.id}" value="${esc(p.subcategory || '')}"></div>
               </div>
+              <div class="row">
+                <div><label>Brand</label>
+                  <select id="ed-brand-${p.id}">
+                    <option value="">— none —</option>
+                    ${adminBrands.map(b => `<option value="${esc(b.id)}" ${p.brand_id === b.id ? 'selected' : ''}>${esc(b.name)}${b.gender && b.gender !== 'unisex' ? ' · ' + esc(b.gender) : ''}</option>`).join('')}
+                  </select>
+                </div>
+                <div></div>
+              </div>
               <div class="field"><label>Description</label><textarea id="ed-desc-${p.id}">${esc(p.description || '')}</textarea></div>
               <button class="btn btn-sm" onclick="saveDetails('${p.id}')">Save details</button>
             </div>
@@ -351,7 +362,8 @@
   function toggleEdit(id) { document.getElementById('edit-' + id).classList.toggle('hide'); }
 
   async function saveDetails(id) {
-    const patch = { name: val('ed-name-' + id), subcategory: val('ed-sub-' + id), description: val('ed-desc-' + id) };
+    const brandSel = document.getElementById('ed-brand-' + id);
+    const patch = { name: val('ed-name-' + id), subcategory: val('ed-sub-' + id), description: val('ed-desc-' + id), brand_id: brandSel ? (brandSel.value || null) : null };
     if (!patch.name) return toast('Name cannot be empty', true);
     try { await patchProduct(id, patch); toast('Details saved'); loadProducts(); }
     catch (e) { toast(e.message, true); }
