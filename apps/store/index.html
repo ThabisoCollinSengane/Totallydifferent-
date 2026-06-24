@@ -22,6 +22,7 @@
     --trans: 0.2s ease;
   }
   html { scroll-behavior: smooth; }
+  picture { display: contents; }
   body { font-family: var(--font-sans); background: var(--white); color: var(--black); min-height: 100vh; }
 
   /* HEADER */
@@ -473,7 +474,7 @@
     <button class="banner-back" onclick="backToBrands()">‹ All brands</button>
     <!-- Floating brand banner: logo + name pinned on top, per brand clicked -->
     <div class="brand-bar" id="brand-bar">
-      <img class="brand-bar-logo" id="banner-logo" alt="" style="display:none">
+      <picture><source id="banner-logo-src" type="image/webp"><img class="brand-bar-logo" id="banner-logo" alt="" style="display:none"></picture>
       <div class="brand-bar-text">
         <div class="banner-tag" id="banner-tag"></div>
         <h2 class="banner-name" id="banner-name"></h2>
@@ -760,10 +761,19 @@
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
     const hero = document.getElementById('banner-hero');
-    if (b.hero_image) { hero.classList.add('has-hero'); hero.style.backgroundImage = `url("${b.hero_image}")`; }
+    if (b.hero_image) {
+      hero.classList.add('has-hero');
+      const hw = webpOf(b.hero_image);
+      hero.style.backgroundImage = `url("${b.hero_image}")`;               // fallback first
+      if (hw) hero.style.backgroundImage = `image-set(url("${hw}") type("image/webp"), url("${b.hero_image}"))`;
+    }
     else { hero.classList.remove('has-hero'); hero.style.backgroundImage = ''; }
     const logo = document.getElementById('banner-logo');
-    if (b.logo_image) { logo.src = b.logo_image; logo.style.display = 'block'; } else logo.style.display = 'none';
+    if (b.logo_image) {
+      const lsrc = document.getElementById('banner-logo-src'); const lwebp = webpOf(b.logo_image);
+      if (lwebp) lsrc.srcset = lwebp; else lsrc.removeAttribute('srcset');
+      logo.src = b.logo_image; logo.style.display = 'block';
+    } else logo.style.display = 'none';
     document.querySelector('.banner-back').style.display = '';
     const gendered = b.gender && b.gender !== 'unisex';
     document.getElementById('banner-tag').textContent = b.tagline || '';
@@ -800,8 +810,8 @@
     const count = catalog.filter(p => p.brand_id === b.id).length;
     const label = b.gender && b.gender !== 'unisex' ? `${b.name} · ${b.gender}` : b.name;
     const story = b.tagline || (b.story || '').split('.')[0];
-    const logoSlide = b.logo_image ? `<img class="bl-slide bl-slide--logo is-active" src="${escHtml(b.logo_image)}" alt="${escHtml(label)}">` : '';
-    const photoSlides = brandSlides(b).map(src => `<img class="bl-slide bl-slide--photo" src="${escHtml(src)}" alt="" loading="lazy">`).join('');
+    const logoSlide = b.logo_image ? pic(b.logo_image, `class="bl-slide bl-slide--logo is-active" alt="${escHtml(label)}"`) : '';
+    const photoSlides = brandSlides(b).map(src => pic(src, 'class="bl-slide bl-slide--photo" alt="" loading="lazy"')).join('');
     const countTxt = count ? `${count} ${count === 1 ? 'piece' : 'pieces'} · Shop ›` : 'Dropping soon';
     return `<div class="brand-card logo-card ${b.glow ? 'glow' : ''}" style="--theme-bg:${escHtml(b.theme_bg || '#0a0a0a')};--theme-accent:${escHtml(b.theme_accent || '#c8a96e')};--theme-text:${escHtml(b.theme_text || '#fafafa')};animation-delay:${delay}s" onclick="openBrand('${b.id}')">
       <div class="bl-top">
@@ -853,8 +863,8 @@
     const firstVariant = variants[0];
     const imgs = p.images || [];
     const imgHtml = imgs[0]
-      ? `<img src="${escHtml(imgs[0])}" alt="${escHtml(p.name)}" loading="lazy">${
-          imgs[1] ? `<img class="img-alt" src="${escHtml(imgs[1])}" alt="" loading="lazy">` : ''}`
+      ? `${pic(imgs[0], `alt="${escHtml(p.name)}" loading="lazy"`)}${
+          imgs[1] ? pic(imgs[1], 'class="img-alt" alt="" loading="lazy"') : ''}`
       : `<div class="product-img-placeholder">${p.category === 'hair' ? '✨' : '👕'}</div>`;
     const delay = Math.min(index, 11) * 0.05;
 
@@ -1018,11 +1028,11 @@
 
     const main = document.getElementById('pdp-main');
     main.innerHTML = imgs.length
-      ? `<img src="${escHtml(imgs[pdpImg] || imgs[0])}" alt="${escHtml(p.name)}">`
+      ? pic(imgs[pdpImg] || imgs[0], `alt="${escHtml(p.name)}"`)
       : `<div class="ph">${p.category === 'hair' ? '✨' : '👕'}</div>`;
 
     document.getElementById('pdp-thumbs').innerHTML = imgs.length > 1
-      ? imgs.map((src, i) => `<div class="pdp-thumb ${i === pdpImg ? 'active' : ''}" onclick="pdpSetImg(${i})"><img src="${escHtml(src)}" alt=""></div>`).join('')
+      ? imgs.map((src, i) => `<div class="pdp-thumb ${i === pdpImg ? 'active' : ''}" onclick="pdpSetImg(${i})">${pic(src, 'alt=""')}</div>`).join('')
       : '';
 
     document.getElementById('pdp-cat').textContent = p.category + (p.subcategory ? ' · ' + p.subcategory : '');
@@ -1105,7 +1115,7 @@
     document.getElementById('similar-grid').innerHTML = items.map(s => {
       const price = priceOf(s, variantsOf(s)[0]);
       const img = (s.images && s.images[0])
-        ? `<img src="${escHtml(s.images[0])}" alt="${escHtml(s.name)}" loading="lazy">`
+        ? pic(s.images[0], `alt="${escHtml(s.name)}" loading="lazy"`)
         : `<div class="ph">${s.category === 'hair' ? '✨' : '👕'}</div>`;
       return `<div class="similar-card" onclick="openProduct('${s.id}')"><div class="simg">${img}</div><div class="sname">${escHtml(s.name)}</div><div class="sprice">R${price.toFixed(2)}</div></div>`;
     }).join('');
@@ -1175,7 +1185,7 @@
     footer.style.display = 'block';
     el.innerHTML = cart.map((item, idx) => {
       const imgHtml = item.images && item.images[0]
-        ? `<img src="${escHtml(item.images[0])}" alt="${escHtml(item.product_name)}">`
+        ? pic(item.images[0], `alt="${escHtml(item.product_name)}"`)
         : '';
       return `
         <div class="cart-item">
@@ -1333,6 +1343,18 @@
 
   function escHtml(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Derive the WebP sibling of a local asset path (/assets/.../x.jpg → x.webp)
+  function webpOf(src) {
+    return /^\/assets\/.+\.(jpe?g|png)$/i.test(src || '') ? src.replace(/\.(jpe?g|png)$/i, '.webp') : null;
+  }
+  // <picture> with a WebP source + the original as fallback. picture{display:contents}
+  // keeps existing layout/selectors untouched. `attrs` go on the inner <img>.
+  function pic(src, attrs = '') {
+    const webp = webpOf(src);
+    const img = `<img src="${escHtml(src)}" ${attrs}>`;
+    return webp ? `<picture><source type="image/webp" srcset="${escHtml(webp)}">${img}</picture>` : img;
   }
 
   function showToast(msg) {
