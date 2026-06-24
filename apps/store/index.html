@@ -352,6 +352,51 @@
   .pdp-add.added { background: var(--gold); color: var(--studio-base); animation: addPop 0.4s ease; }
   .pdp-similar { border-top: 1px solid var(--studio-border); padding: 28px 32px 36px; }
   .pdp-similar h3 { font-family: var(--font); font-weight: 400; font-size: 20px; margin-bottom: 18px; color: var(--cream); }
+
+  /* REVIEWS */
+  .pdp-reviews { border-top: 1px solid var(--studio-border); padding: 28px 32px 40px; }
+  .pdp-reviews-header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .pdp-reviews-header h3 { font-family: var(--font); font-weight: 400; font-size: 20px; color: var(--cream); }
+  .review-avg { font-size: 22px; color: var(--gold); font-weight: 700; }
+  .review-avg-stars { font-size: 16px; color: var(--gold); letter-spacing: 2px; }
+  .review-count { font-size: 13px; color: var(--cream-muted); }
+  .review-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px; }
+  .review-card {
+    background: var(--studio-raised); border-radius: var(--radius); padding: 16px 18px;
+    border: 1px solid var(--studio-border);
+  }
+  .review-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .review-card-name { font-weight: 600; font-size: 14px; color: var(--cream); }
+  .review-card-stars { color: var(--gold); font-size: 14px; letter-spacing: 1px; }
+  .review-card-date { font-size: 11px; color: var(--cream-muted); margin-left: auto; }
+  .review-card-comment { font-size: 13px; color: var(--cream-muted); line-height: 1.6; }
+  .review-card-photo { margin-top: 12px; }
+  .review-card-photo img { max-width: 180px; max-height: 180px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--studio-border); cursor: pointer; }
+  /* submit form */
+  .review-form-toggle { background: none; border: 1px solid var(--maroon); color: var(--cream); padding: 10px 22px; border-radius: var(--radius); cursor: pointer; font-size: 13px; letter-spacing: 0.05em; transition: background var(--trans); margin-bottom: 18px; }
+  .review-form-toggle:hover { background: var(--maroon); }
+  .review-form { background: var(--studio-raised); border-radius: var(--radius); padding: 20px; border: 1px solid var(--studio-border); display: none; }
+  .review-form.open { display: block; }
+  .review-form h4 { font-family: var(--font); font-size: 16px; font-weight: 400; color: var(--cream); margin-bottom: 14px; }
+  .star-picker { display: flex; gap: 6px; margin-bottom: 16px; font-size: 28px; cursor: pointer; }
+  .star-picker span { color: var(--studio-border); transition: color var(--trans); }
+  .star-picker span.lit { color: var(--gold); }
+  .review-form input, .review-form textarea {
+    width: 100%; padding: 10px 12px; background: var(--studio-surface); border: 1px solid var(--studio-border);
+    border-radius: var(--radius); color: var(--cream); font-size: 13px; font-family: var(--font-sans);
+    margin-bottom: 12px; transition: border-color var(--trans);
+  }
+  .review-form input:focus, .review-form textarea:focus { outline: none; border-color: var(--gold); }
+  .review-form textarea { resize: vertical; min-height: 80px; }
+  .review-photo-label { display: inline-block; cursor: pointer; padding: 8px 16px; border: 1px dashed var(--studio-border); border-radius: var(--radius); font-size: 12px; color: var(--cream-muted); margin-bottom: 12px; transition: border-color var(--trans); }
+  .review-photo-label:hover { border-color: var(--gold); color: var(--cream); }
+  #review-photo-input { display: none; }
+  .review-photo-preview { display: none; max-width: 120px; max-height: 120px; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; border: 1px solid var(--studio-border); }
+  .review-submit-btn { background: var(--maroon); color: var(--cream); border: none; padding: 11px 28px; border-radius: var(--radius); cursor: pointer; font-size: 13px; letter-spacing: 0.06em; transition: background var(--trans); }
+  .review-submit-btn:hover { background: var(--maroon-mid); }
+  .review-submit-btn:disabled { background: #3a2530; color: var(--cream-muted); cursor: not-allowed; }
+  .review-success { color: var(--gold); font-size: 13px; margin-top: 10px; display: none; }
+  @media (max-width: 720px) { .pdp-reviews { padding: 24px 20px 32px; } }
   .similar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .similar-card { cursor: pointer; }
   .similar-card .simg { width: 100%; aspect-ratio: 3/4; background: var(--grey-light); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -618,6 +663,31 @@
     <div class="pdp-similar" id="pdp-similar" style="display:none">
       <h3>You may also like</h3>
       <div class="similar-grid" id="similar-grid"></div>
+    </div>
+    <div class="pdp-reviews" id="pdp-reviews" style="display:none">
+      <div class="pdp-reviews-header">
+        <h3>Customer Reviews</h3>
+        <span class="review-avg" id="review-avg"></span>
+        <span class="review-avg-stars" id="review-avg-stars"></span>
+        <span class="review-count" id="review-count"></span>
+      </div>
+      <div class="review-list" id="review-list"></div>
+      <button class="review-form-toggle" id="review-form-toggle" onclick="toggleReviewForm()">Write a Review</button>
+      <div class="review-form" id="review-form">
+        <h4>Share your experience</h4>
+        <div class="star-picker" id="star-picker">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span>
+          <span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+        <input id="review-name" placeholder="Your name" maxlength="80">
+        <textarea id="review-comment" placeholder="Tell others about this product…" maxlength="1200"></textarea>
+        <label class="review-photo-label" for="review-photo-input">📷 Add a photo (optional)</label>
+        <input type="file" id="review-photo-input" accept="image/*" onchange="reviewPhotoChosen(this)">
+        <img id="review-photo-preview" class="review-photo-preview" alt="preview">
+        <br>
+        <button class="review-submit-btn" id="review-submit-btn" onclick="submitReview()">Submit Review</button>
+        <div class="review-success" id="review-success">Thank you! Your review will appear after a quick check.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1097,6 +1167,7 @@
     const firstAvail = vs.find(v => v.stock > 0) || vs[0] || null;
     pdpVariantId = firstAvail ? firstAvail.id : null;
     renderPDP();
+    loadReviews(p.id);
     const ov = document.getElementById('pdp-overlay');
     ov.classList.add('open');
     ov.scrollTop = 0;
@@ -1122,6 +1193,138 @@
     document.getElementById('pdp-overlay').classList.remove('open');
     document.body.classList.remove('no-scroll');
     pdpProduct = null;
+  }
+
+  // ── REVIEWS ────────────────────────────────────────────────
+  const SB_URL  = 'https://ekmgnrnlhksqywdmftcs.supabase.co';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbWducm5saGtzcXl3ZG1mdGNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNzkzNTAsImV4cCI6MjA5Nzc1NTM1MH0.vwvhdK_qufjnhZkbVSslu_eK0QYoC5iAA8949P8b--8';
+
+  let reviewRating = 0;
+  let reviewPhotoFile = null;
+
+  async function loadReviews(productId) {
+    const wrap = document.getElementById('pdp-reviews');
+    wrap.style.display = 'block';
+    document.getElementById('review-list').innerHTML = '';
+    document.getElementById('review-avg').textContent = '';
+    document.getElementById('review-avg-stars').textContent = '';
+    document.getElementById('review-count').textContent = '';
+    resetReviewForm();
+
+    const res = await fetch(`/api/reviews?product=${encodeURIComponent(productId)}`);
+    if (!res.ok) return;
+    const { reviews } = await res.json();
+
+    const list = document.getElementById('review-list');
+    if (!reviews || reviews.length === 0) {
+      list.innerHTML = `<p style="color:var(--cream-muted);font-size:13px;">No reviews yet — be the first!</p>`;
+      return;
+    }
+
+    const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+    document.getElementById('review-avg').textContent = avg;
+    document.getElementById('review-avg-stars').textContent = starsStr(Math.round(avg));
+    document.getElementById('review-count').textContent = `(${reviews.length} review${reviews.length !== 1 ? 's' : ''})`;
+
+    list.innerHTML = reviews.map(r => `
+      <div class="review-card">
+        <div class="review-card-top">
+          <span class="review-card-name">${escHtml(r.reviewer_name)}</span>
+          <span class="review-card-stars">${starsStr(r.rating)}</span>
+          <span class="review-card-date">${new Date(r.created_at).toLocaleDateString('en-ZA',{year:'numeric',month:'short',day:'numeric'})}</span>
+        </div>
+        ${r.comment ? `<p class="review-card-comment">${escHtml(r.comment)}</p>` : ''}
+        ${r.photo_url ? `<div class="review-card-photo"><img src="${escHtml(r.photo_url)}" alt="customer photo" onclick="window.open('${escHtml(r.photo_url)}','_blank')"></div>` : ''}
+      </div>`).join('');
+  }
+
+  function starsStr(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+  function toggleReviewForm() {
+    const f = document.getElementById('review-form');
+    f.classList.toggle('open');
+    document.getElementById('review-form-toggle').textContent = f.classList.contains('open') ? 'Cancel' : 'Write a Review';
+  }
+
+  function resetReviewForm() {
+    reviewRating = 0; reviewPhotoFile = null;
+    const f = document.getElementById('review-form');
+    if (f) { f.classList.remove('open'); }
+    const tog = document.getElementById('review-form-toggle');
+    if (tog) tog.textContent = 'Write a Review';
+    ['review-name','review-comment'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const prev = document.getElementById('review-photo-preview');
+    if (prev) { prev.src = ''; prev.style.display = 'none'; }
+    const inp = document.getElementById('review-photo-input');
+    if (inp) inp.value = '';
+    const suc = document.getElementById('review-success');
+    if (suc) suc.style.display = 'none';
+    renderStarPicker(0);
+  }
+
+  function renderStarPicker(val) {
+    document.querySelectorAll('#star-picker span').forEach(s => {
+      s.classList.toggle('lit', Number(s.dataset.v) <= val);
+    });
+  }
+
+  document.addEventListener('click', e => {
+    const s = e.target.closest('#star-picker span');
+    if (!s) return;
+    reviewRating = Number(s.dataset.v);
+    renderStarPicker(reviewRating);
+  });
+
+  function reviewPhotoChosen(input) {
+    const file = input.files[0];
+    if (!file) return;
+    reviewPhotoFile = file;
+    const prev = document.getElementById('review-photo-preview');
+    prev.src = URL.createObjectURL(file);
+    prev.style.display = 'block';
+  }
+
+  async function uploadReviewPhoto(file) {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const res = await fetch(`${SB_URL}/storage/v1/object/review-photos/${path}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SB_ANON}`, 'Content-Type': file.type },
+      body: file,
+    });
+    if (!res.ok) throw new Error('Photo upload failed');
+    return `${SB_URL}/storage/v1/object/public/review-photos/${path}`;
+  }
+
+  async function submitReview() {
+    const name = document.getElementById('review-name').value.trim();
+    const comment = document.getElementById('review-comment').value.trim();
+    if (!name) { alert('Please enter your name.'); return; }
+    if (!reviewRating) { alert('Please select a star rating.'); return; }
+
+    const btn = document.getElementById('review-submit-btn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+
+    try {
+      let photo_url = null;
+      if (reviewPhotoFile) {
+        photo_url = await uploadReviewPhoto(reviewPhotoFile);
+      }
+
+      const r = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: pdpProduct.id, reviewer_name: name, rating: reviewRating, comment, photo_url }),
+      });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || 'Submit failed');
+
+      document.getElementById('review-success').style.display = 'block';
+      btn.style.display = 'none';
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = 'Submit Review';
+    }
   }
 
   function renderPDP() {

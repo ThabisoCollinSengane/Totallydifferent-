@@ -11,6 +11,8 @@
 //   GET  /api/admin/products      → Admin (service-role)
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
+//   GET  /api/reviews?product=    → Reviews Engine
+//   POST /api/reviews             → Reviews Engine
 
 const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, captureError } = require('./shared');
 const crypto = require('crypto');
@@ -300,6 +302,41 @@ const handler = async (req, res) => {
       .update({ status }).eq('order_ref', adminOrderRef).select().single();
     if (error || !data) return json(res, 404, { error: 'Order not found' });
     return json(res, 200, { order: data });
+  }
+
+  // ── REVIEWS ENGINE ─────────────────────────────────────────
+  // GET /api/reviews?product=<id>  — approved reviews for a product
+  if (url === '/reviews' && req.method === 'GET') {
+    if (!q.product) return json(res, 400, { error: 'product param required' });
+    const { data, error } = await sb().from('reviews')
+      .select('id, reviewer_name, rating, comment, photo_url, created_at')
+      .eq('product_id', q.product)
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 200, { reviews: data });
+  }
+
+  // POST /api/reviews  — submit a new review (pending approval)
+  if (url === '/reviews' && req.method === 'POST') {
+    const { product_id, reviewer_name, rating, comment, photo_url } = req.body || {};
+    if (!product_id || !reviewer_name || !rating) {
+      return json(res, 400, { error: 'product_id, reviewer_name and rating are required' });
+    }
+    const r = Number(rating);
+    if (!Number.isInteger(r) || r < 1 || r > 5) {
+      return json(res, 400, { error: 'rating must be 1–5' });
+    }
+    const { error } = await sb().from('reviews').insert({
+      product_id,
+      reviewer_name: String(reviewer_name).slice(0, 80),
+      rating: r,
+      comment: comment ? String(comment).slice(0, 1200) : null,
+      photo_url: photo_url ? String(photo_url).slice(0, 500) : null,
+      is_approved: false,
+    });
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 201, { message: 'Review submitted — it will appear after approval. Thank you!' });
   }
 
   return json(res, 404, { error: 'Not found' });
