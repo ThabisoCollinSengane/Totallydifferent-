@@ -28,6 +28,13 @@ module.exports = async (req, res) => {
   const q   = Object.fromEntries(new URL(req.url, 'http://x').searchParams);
 
   // ── PRODUCT ENGINE ─────────────────────────────────────────
+  if (url === '/brands' && req.method === 'GET') {
+    const { data, error } = await sb().from('brands')
+      .select('*').eq('is_active', true).order('sort', { ascending: true });
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 200, { brands: data });
+  }
+
   if (url === '/products' && req.method === 'GET') {
     const filter = sb().from('products')
       .select('*, product_variants(*)')
@@ -36,6 +43,7 @@ module.exports = async (req, res) => {
       .order('created_at', { ascending: false });
     if (q.category) filter.eq('category', q.category);
     if (q.subcategory) filter.eq('subcategory', q.subcategory);
+    if (q.brand) filter.eq('brand_id', q.brand);
     const { data, error } = await filter;
     if (error) return json(res, 400, { error: error.message });
     return json(res, 200, { products: data });
@@ -212,11 +220,11 @@ module.exports = async (req, res) => {
   }
 
   if (url === '/admin/products' && req.method === 'POST') {
-    const { id, name, description, category, subcategory, base_price, images, is_featured } = req.body || {};
+    const { id, name, description, category, subcategory, base_price, images, is_featured, brand_id, specs } = req.body || {};
     if (!id || !name || !category || base_price == null)
       return json(res, 400, { error: 'id, name, category, base_price required' });
     const { data, error } = await sb().from('products')
-      .insert({ id, name, description, category, subcategory, base_price, images: images || [], is_featured: is_featured || false })
+      .insert({ id, name, description, category, subcategory, base_price, images: images || [], is_featured: is_featured || false, brand_id: brand_id || null, specs: specs || null })
       .select().single();
     if (error) return json(res, 400, { error: error.message });
     return json(res, 201, { product: data });
@@ -225,7 +233,7 @@ module.exports = async (req, res) => {
   // Update an existing product (images, price, flags, copy)
   const adminProductId = url.match(/^\/admin\/products\/([^/]+)$/)?.[1];
   if (adminProductId && req.method === 'PATCH') {
-    const allowed = ['name','description','category','subcategory','base_price','images','is_active','is_featured'];
+    const allowed = ['name','description','category','subcategory','base_price','images','is_active','is_featured','brand_id','specs'];
     const patch = {};
     for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
     if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });

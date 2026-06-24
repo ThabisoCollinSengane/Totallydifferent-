@@ -302,6 +302,51 @@
     .similar-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
+  /* BRAND GRID */
+  .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .brand-card { position: relative; aspect-ratio: 4/5; border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--grey-light); opacity: 0; animation: cardIn 0.45s ease forwards; }
+  .brand-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+  .brand-card:hover img { transform: scale(1.05); }
+  .brand-card .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.74), rgba(0,0,0,0.05) 55%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
+  .brand-card .b-name { font-family: var(--font); font-size: 24px; color: #fff; letter-spacing: 0.04em; }
+  .brand-card .b-tag { color: #eee; font-size: 13px; margin-top: 2px; }
+  .brand-card .b-count { color: #ccc; font-size: 11px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* THEMED SHOP (brand / hair) */
+  .products-section.themed { background: var(--theme-bg); color: var(--theme-text); margin: 0; padding: 32px 24px 64px; max-width: none; }
+  .products-section.themed .products-grid { max-width: 1200px; margin: 0 auto; }
+  .products-section.themed .product-card { background: color-mix(in srgb, var(--theme-bg) 86%, #fff); border-color: color-mix(in srgb, var(--theme-bg) 66%, #fff); }
+  .products-section.themed .product-name { color: var(--theme-text); }
+  .products-section.themed .product-price { color: var(--theme-accent); }
+  .products-section.themed .variant-chip { color: var(--theme-text); border-color: color-mix(in srgb, var(--theme-text) 30%, transparent); }
+  .products-section.themed .variant-chip.selected { background: var(--theme-accent); color: var(--theme-bg); border-color: var(--theme-accent); }
+  .products-section.themed .add-btn { background: var(--theme-accent); color: var(--theme-bg); }
+  .products-section.themed.glow .add-btn, .products-section.themed.glow .variant-chip.selected { box-shadow: 0 0 16px color-mix(in srgb, var(--theme-accent) 70%, transparent); }
+  .products-section.themed .product-cat-badge { background: var(--theme-bg); color: var(--theme-text); }
+  .products-section.themed .product-img-placeholder { color: color-mix(in srgb, var(--theme-text) 30%, transparent); }
+
+  /* THEME BANNER */
+  .theme-banner { margin: 0 auto 28px; max-width: 1200px; }
+  .banner-back { background: none; border: none; color: inherit; cursor: pointer; font-size: 13px; opacity: 0.8; margin-bottom: 14px; padding: 0; }
+  .banner-back:hover { opacity: 1; }
+  .banner-inner { display: flex; gap: 20px; align-items: center; }
+  .banner-logo { width: 84px; height: 84px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.06); padding: 6px; flex-shrink: 0; }
+  .banner-tag { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-accent); margin-bottom: 4px; }
+  .banner-name { font-family: var(--font); font-weight: 400; font-size: 30px; letter-spacing: 0.04em; }
+  .banner-story { font-size: 14px; line-height: 1.65; max-width: 640px; margin-top: 8px; opacity: 0.85; }
+
+  /* HAIR SPECS (PDP) — Alibaba listing style */
+  .pdp-specs { margin: 4px 0 22px; }
+  .spec-features { list-style: none; padding: 0; margin: 0 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+  .spec-features li { font-size: 13px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+  .spec-features li::before { content: '✓'; color: #2a9d57; font-weight: 700; flex-shrink: 0; }
+  .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid var(--grey-border); border-radius: var(--radius); overflow: hidden; }
+  .spec-table tr { border-bottom: 1px solid var(--grey-border); }
+  .spec-table tr:last-child { border-bottom: none; }
+  .spec-table td { padding: 9px 12px; }
+  .spec-table td.k { color: var(--grey); width: 42%; background: var(--grey-light); }
+  @media (max-width: 560px) { .spec-features { grid-template-columns: 1fr; } }
+
   /* FOOTER */
   footer {
     background: var(--black); color: var(--grey); text-align: center;
@@ -348,12 +393,27 @@
 
 <div class="filters">
   <span class="filter-label">SHOP</span>
-  <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
-  <button class="filter-btn" onclick="filterProducts('clothing', this)">Clothing</button>
-  <button class="filter-btn" onclick="filterProducts('hair', this)">Hair</button>
+  <button class="filter-btn active" data-cat="all" onclick="filterProducts('all')">All</button>
+  <button class="filter-btn" data-cat="clothing" onclick="filterProducts('clothing')">Clothing</button>
+  <button class="filter-btn" data-cat="hair" onclick="filterProducts('hair')">Hair</button>
 </div>
 
 <main class="products-section" id="shop">
+  <!-- Themed banner for a brand or the hair category -->
+  <div class="theme-banner" id="theme-banner" style="display:none">
+    <button class="banner-back" onclick="backToBrands()">‹ All brands</button>
+    <div class="banner-inner">
+      <img class="banner-logo" id="banner-logo" alt="" style="display:none">
+      <div>
+        <div class="banner-tag" id="banner-tag"></div>
+        <h2 class="banner-name" id="banner-name"></h2>
+        <p class="banner-story" id="banner-story"></p>
+      </div>
+    </div>
+  </div>
+  <!-- Brand hero cards (Clothing menu) -->
+  <div class="brand-grid" id="brand-grid" style="display:none"></div>
+  <!-- Product grid (All / Hair / inside a brand) -->
   <div class="products-grid" id="products-grid">
     <div class="loading">Loading products…</div>
   </div>
@@ -392,6 +452,7 @@
         <h1 class="pdp-name" id="pdp-name"></h1>
         <div class="pdp-price" id="pdp-price"></div>
         <p class="pdp-desc" id="pdp-desc"></p>
+        <div class="pdp-specs" id="pdp-specs" style="display:none"></div>
         <div class="pdp-section-label" id="pdp-opt-label">Select an option</div>
         <div class="pdp-variants" id="pdp-variants"></div>
         <div class="pdp-qty-row">
@@ -474,36 +535,134 @@
 
   // ── Products ──────────────────────────────────────────────────────────────
 
+  let brands = [];
+  let currentBrand = null;
+
   async function loadProducts() {
     const grid = document.getElementById('products-grid');
     grid.innerHTML = '<div class="loading">Loading products…</div>';
     try {
-      const res = await fetch(`${API}/products`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load');
-      catalog = data.products || [];
-      renderGrid();
-      maybeOpenFromUrl();
+      const [pRes, bRes] = await Promise.all([fetch(`${API}/products`), fetch(`${API}/brands`)]);
+      const pData = await pRes.json();
+      if (!pRes.ok) throw new Error(pData.error || 'Failed to load');
+      catalog = pData.products || [];
+      try { brands = (await bRes.json()).brands || []; } catch { brands = []; }
+      routeFromUrl();
     } catch (e) {
       grid.innerHTML = `<div class="empty"><h3>Couldn't load products</h3><p>${e.message}</p></div>`;
     }
   }
 
-  function filterProducts(cat, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentCategory = cat;
-    renderGrid();
+  const elBanner = () => document.getElementById('theme-banner');
+  const elBrandGrid = () => document.getElementById('brand-grid');
+  const elGrid = () => document.getElementById('products-grid');
+  const elShop = () => document.getElementById('shop');
+
+  function setActiveFilter(cat) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  }
+  function clearTheme() {
+    const s = elShop(); s.classList.remove('themed', 'glow');
+    ['--theme-bg', '--theme-accent', '--theme-text'].forEach(v => s.style.removeProperty(v));
+  }
+  function applyTheme(bg, accent, text, glow) {
+    const s = elShop();
+    s.style.setProperty('--theme-bg', bg); s.style.setProperty('--theme-accent', accent); s.style.setProperty('--theme-text', text);
+    s.classList.add('themed'); s.classList.toggle('glow', !!glow);
   }
 
-  function renderGrid() {
-    const grid = document.getElementById('products-grid');
-    const list = currentCategory === 'all' ? catalog : catalog.filter(p => p.category === currentCategory);
+  function filterProducts(cat) {
+    if (cat === 'clothing') return showBrands(true);
+    if (cat === 'hair') return showHair(true);
+    return showAll(true);
+  }
+
+  function showAll(push) {
+    currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearTheme();
+    elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
+    renderList(catalog);
+    if (push) pushView('');
+  }
+
+  function showBrands(push) {
+    currentCategory = 'clothing'; currentBrand = null; setActiveFilter('clothing'); clearTheme();
+    elBanner().style.display = 'none'; elGrid().style.display = 'none';
+    const bg = elBrandGrid(); bg.style.display = 'grid';
+    bg.innerHTML = brands.length ? brands.map((b, i) => brandCardHTML(b, i)).join('')
+      : '<div class="empty"><h3>No brands yet</h3><p>Check back soon.</p></div>';
+    if (push) pushView('?view=clothing');
+  }
+
+  function showHair(push) {
+    currentCategory = 'hair'; currentBrand = null; setActiveFilter('hair');
+    applyTheme('#efd9dd', '#b06a7c', '#2a2024', false);
+    elBrandGrid().style.display = 'none';
+    const banner = elBanner(); banner.style.display = 'block';
+    document.getElementById('banner-logo').style.display = 'none';
+    document.querySelector('.banner-back').style.display = 'none';
+    document.getElementById('banner-tag').textContent = 'Hair';
+    document.getElementById('banner-name').textContent = 'Premium Hair';
+    document.getElementById('banner-story').textContent = '100% human-hair weaves & raw bundles — cuticle-aligned, dyeable and built to last. Tap a product for the full spec sheet.';
+    elGrid().style.display = 'grid';
+    renderList(catalog.filter(p => p.category === 'hair'));
+    if (push) pushView('?view=hair');
+  }
+
+  function openBrand(id, push = true) {
+    const b = brands.find(x => x.id === id);
+    if (!b) return showBrands(push);
+    currentCategory = 'brand'; currentBrand = id; setActiveFilter('clothing');
+    applyTheme(b.theme_bg || '#0a0a0a', b.theme_accent || '#c8a96e', b.theme_text || '#fafafa', b.glow);
+    elBrandGrid().style.display = 'none';
+    const banner = elBanner(); banner.style.display = 'block';
+    const logo = document.getElementById('banner-logo');
+    if (b.logo_image) { logo.src = b.logo_image; logo.style.display = 'block'; } else logo.style.display = 'none';
+    document.querySelector('.banner-back').style.display = '';
+    const gendered = b.gender && b.gender !== 'unisex';
+    document.getElementById('banner-tag').textContent = b.tagline || '';
+    document.getElementById('banner-name').textContent = gendered ? `${b.name} · ${b.gender}` : b.name;
+    document.getElementById('banner-story').textContent = b.story || '';
+    elGrid().style.display = 'grid';
+    const items = catalog.filter(p => p.brand_id === id);
+    renderList(items, items.length ? null : `${b.name} pieces are dropping soon.`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (push) pushView('?brand=' + encodeURIComponent(id));
+  }
+
+  function backToBrands() { showBrands(true); }
+
+  function renderList(list, emptyMsg) {
+    const grid = elGrid();
     if (!list.length) {
-      grid.innerHTML = '<div class="empty"><h3>Nothing here yet</h3><p>Check back soon.</p></div>';
+      grid.innerHTML = `<div class="empty"><h3>${escHtml(emptyMsg || 'Nothing here yet')}</h3><p>Check back soon.</p></div>`;
       return;
     }
     grid.innerHTML = list.map((p, i) => productCardHTML(p, i)).join('');
+  }
+
+  function brandCardHTML(b, i) {
+    const delay = Math.min(i, 9) * 0.06;
+    const count = catalog.filter(p => p.brand_id === b.id).length;
+    const label = b.gender && b.gender !== 'unisex' ? `${b.name} · ${b.gender}` : b.name;
+    const img = b.hero_image ? `<img src="${escHtml(b.hero_image)}" alt="${escHtml(label)}" loading="lazy">` : '';
+    return `<div class="brand-card" style="animation-delay:${delay}s" onclick="openBrand('${b.id}')">
+      ${img}<div class="overlay">
+        <div class="b-name">${escHtml(label)}</div>
+        <div class="b-tag">${escHtml(b.tagline || '')}</div>
+        <div class="b-count">${count} ${count === 1 ? 'piece' : 'pieces'}</div>
+      </div></div>`;
+  }
+
+  // ── URL routing (shareable views + back button) ────────────────────────────
+  function pushView(qs) { history.pushState({}, '', qs || location.pathname); }
+  function routeFromUrl() {
+    const params = new URLSearchParams(location.search);
+    const product = params.get('product'), brand = params.get('brand'), view = params.get('view');
+    if (brand) openBrand(brand, false);
+    else if (view === 'hair') showHair(false);
+    else if (view === 'clothing') showBrands(false);
+    else showAll(false);
+    if (product && byId(product)) openProduct(product, false); else hidePDP();
   }
 
   function productCardHTML(p, index = 0) {
@@ -645,12 +804,19 @@
     ov.classList.add('open');
     ov.scrollTop = 0;
     document.body.classList.add('no-scroll');
-    if (push) history.pushState({ product: id }, '', `?product=${encodeURIComponent(id)}`);
+    if (push) {
+      const params = new URLSearchParams(location.search);
+      params.set('product', id);
+      history.pushState({}, '', '?' + params.toString()); // keep brand/view context
+    }
   }
 
   function closeProduct() {
-    if (new URLSearchParams(location.search).get('product')) {
-      history.pushState({}, '', location.pathname); // drop ?product= without a reload
+    const params = new URLSearchParams(location.search);
+    if (params.get('product')) {
+      params.delete('product');
+      const qs = params.toString();
+      history.pushState({}, '', qs ? '?' + qs : location.pathname);
     }
     hidePDP();
   }
@@ -678,6 +844,16 @@
     document.getElementById('pdp-cat').textContent = p.category + (p.subcategory ? ' · ' + p.subcategory : '');
     document.getElementById('pdp-name').textContent = p.name;
     document.getElementById('pdp-desc').textContent = p.description || '';
+
+    // Spec sheet (Alibaba-style feature checklist + attributes table)
+    const specsEl = document.getElementById('pdp-specs');
+    const specs = p.specs || null;
+    if (specs && (specs.features || specs.attributes)) {
+      const feats = (specs.features || []).map(f => `<li>${escHtml(f)}</li>`).join('');
+      const attrs = Object.entries(specs.attributes || {}).map(([k, v]) => `<tr><td class="k">${escHtml(k)}</td><td>${escHtml(v)}</td></tr>`).join('');
+      specsEl.innerHTML = (feats ? `<ul class="spec-features">${feats}</ul>` : '') + (attrs ? `<table class="spec-table">${attrs}</table>` : '');
+      specsEl.style.display = 'block';
+    } else { specsEl.style.display = 'none'; specsEl.innerHTML = ''; }
 
     const isHair = p.category === 'hair';
     document.getElementById('pdp-opt-label').textContent = isHair ? 'Select size' : 'Select option';
@@ -984,11 +1160,8 @@
 
   // ── Boot ──────────────────────────────────────────────────────────────────
 
-  // Back/forward button drives the product overlay
-  window.addEventListener('popstate', () => {
-    const id = new URLSearchParams(location.search).get('product');
-    if (id) openProduct(id, false); else hidePDP();
-  });
+  // Back/forward button drives the brand/hair view and product overlay
+  window.addEventListener('popstate', () => { if (catalog.length) routeFromUrl(); });
 
   // Escape closes the topmost layer
   document.addEventListener('keydown', e => {
