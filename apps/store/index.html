@@ -56,6 +56,12 @@
   .hero h1 { font-family: var(--font); font-size: clamp(28px, 6vw, 56px); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 12px; }
   .hero p { color: var(--grey); font-size: 15px; letter-spacing: 0.04em; }
   .hero-badge { display: inline-block; margin-top: 16px; padding: 6px 16px; border: 1px solid var(--gold); color: var(--gold); font-size: 12px; letter-spacing: 0.08em; }
+  .hero-cta {
+    display: inline-block; margin-top: 22px; padding: 12px 30px; background: var(--gold); color: var(--black);
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; border-radius: var(--radius);
+    transition: background var(--trans), transform var(--trans);
+  }
+  .hero-cta:hover { background: var(--gold-light); transform: translateY(-2px); }
 
   /* FILTERS */
   .filters { display: flex; align-items: center; gap: 8px; padding: 20px 24px; border-bottom: 1px solid var(--grey-border); flex-wrap: wrap; }
@@ -66,6 +72,25 @@
   .filter-btn:hover { border-color: var(--black); }
   .filter-btn.active { background: var(--black); color: var(--white); border-color: var(--black); }
   .filter-label { font-size: 12px; color: var(--grey); margin-right: 4px; }
+  /* Search box */
+  .search-wrap { position: relative; margin-left: auto; display: flex; align-items: center; }
+  .search-wrap svg { position: absolute; left: 12px; color: var(--grey); pointer-events: none; }
+  .search-input {
+    padding: 8px 14px 8px 34px; border: 1px solid var(--grey-border); border-radius: var(--radius);
+    font-size: 13px; width: 200px; max-width: 46vw; transition: border-color var(--trans), width var(--trans);
+    background: var(--white); color: var(--black);
+  }
+  .search-input:focus { outline: none; border-color: var(--gold); width: 240px; }
+  /* Wishlist heart on cards */
+  .wish-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 2; width: 34px; height: 34px;
+    border: none; border-radius: 50%; background: rgba(255,255,255,0.86); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 16px; line-height: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.14); transition: transform var(--trans), background var(--trans); color: var(--grey);
+  }
+  .wish-btn:hover { transform: scale(1.12); background: #fff; }
+  .wish-btn.saved { color: var(--red); }
+  .filter-btn .saved-count { margin-left: 6px; font-size: 11px; opacity: 0.8; }
 
   /* GRID */
   .products-section { padding: 32px 24px 64px; max-width: 1200px; margin: 0 auto; }
@@ -425,7 +450,8 @@
 
 <section class="hero">
   <h1>TOTALLY DIFFERENT</h1>
-  <p>Not louder. Just totally different.</p>
+  <p>Premium clothing &amp; hair, designed and tested in Durban. Not louder — just totally different.</p>
+  <a class="hero-cta" href="#shop">Shop the collection</a>
   <div class="hero-badge">FREE DELIVERY OVER R750</div>
 </section>
 
@@ -434,6 +460,11 @@
   <button class="filter-btn active" data-cat="all" onclick="filterProducts('all')">All</button>
   <button class="filter-btn" data-cat="clothing" onclick="filterProducts('clothing')">Clothing</button>
   <button class="filter-btn" data-cat="hair" onclick="filterProducts('hair')">Hair</button>
+  <button class="filter-btn" data-cat="saved" onclick="showSaved(true)">♡ Saved<span class="saved-count" id="saved-count"></span></button>
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" class="search-input" id="search-input" placeholder="Search products…" oninput="onSearch(this.value)" aria-label="Search products">
+  </div>
 </div>
 
 <main class="products-section" id="shop">
@@ -571,7 +602,11 @@
   let catalog = [];          // every product, fetched once
   let currentCategory = 'all';
   let cart = JSON.parse(localStorage.getItem('td_cart') || '[]');
+  let wish = JSON.parse(localStorage.getItem('td_wish') || '[]');
   let serverTotals = null;
+  let searchQuery = '';
+
+  const brandName = id => (brands.find(b => b.id === id) || {}).name || '';
 
   const variantsOf = p => p.product_variants || p.variants || [];
   const priceOf = (p, v) => (v && v.price_override != null) ? v.price_override : p.base_price;
@@ -615,10 +650,69 @@
     s.classList.add('themed'); s.classList.toggle('glow', !!glow);
   }
 
+  function clearSearchInput() {
+    const el = document.getElementById('search-input');
+    if (el) el.value = '';
+    searchQuery = '';
+  }
+
   function filterProducts(cat) {
+    clearSearchInput();
     if (cat === 'clothing') return showBrands(true);
     if (cat === 'hair') return showHair(true);
     return showAll(true);
+  }
+
+  // ── Search (across the whole catalogue, from any view) ──────────────────────
+  function onSearch(value) {
+    searchQuery = (value || '').trim();
+    if (!searchQuery) { restoreView(); return; }
+    const q = searchQuery.toLowerCase();
+    const results = catalog.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q) ||
+      (p.subcategory || '').toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q) ||
+      brandName(p.brand_id).toLowerCase().includes(q));
+    clearBrandTimers(); clearTheme(); setActiveFilter('');
+    elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
+    renderList(results, `No matches for “${searchQuery}”`);
+  }
+
+  // Re-show whatever view was active before a search was typed
+  function restoreView() {
+    if (currentCategory === 'brand' && currentBrand) return openBrand(currentBrand, false);
+    if (currentCategory === 'clothing') return showBrands(false);
+    if (currentCategory === 'hair') return showHair(false);
+    if (currentCategory === 'saved') return showSaved(false);
+    return showAll(false);
+  }
+
+  // ── Wishlist (saved items, persisted to localStorage) ───────────────────────
+  function isWished(id) { return wish.includes(id); }
+  function saveWish() { localStorage.setItem('td_wish', JSON.stringify(wish)); updateSavedCount(); }
+  function updateSavedCount() {
+    const el = document.getElementById('saved-count');
+    if (el) el.textContent = wish.length ? ` (${wish.length})` : '';
+  }
+  function toggleWish(id, ev) {
+    if (ev) ev.stopPropagation();
+    const i = wish.indexOf(id);
+    if (i === -1) { wish.push(id); showToast('Saved to wishlist'); }
+    else { wish.splice(i, 1); }
+    saveWish();
+    // reflect on the card's heart
+    const btn = document.querySelector(`.wish-btn[data-id="${id}"]`);
+    if (btn) { const on = isWished(id); btn.classList.toggle('saved', on); btn.textContent = on ? '♥' : '♡'; btn.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Save to wishlist'); }
+    if (currentCategory === 'saved') showSaved(false); // keep the saved view in sync
+  }
+  function showSaved(push) {
+    clearSearchInput();
+    currentCategory = 'saved'; currentBrand = null; setActiveFilter('saved'); clearTheme(); clearBrandTimers();
+    elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
+    const items = catalog.filter(p => wish.includes(p.id));
+    renderList(items, 'No saved items yet — tap the ♡ on any product.');
+    if (push) pushView('?view=saved');
   }
 
   function showAll(push) {
@@ -660,7 +754,7 @@
   function openBrand(id, push = true) {
     const b = brands.find(x => x.id === id);
     if (!b) return showBrands(push);
-    clearBrandTimers();
+    clearSearchInput(); clearBrandTimers();
     currentCategory = 'brand'; currentBrand = id; setActiveFilter('clothing');
     applyTheme(b.theme_bg || '#0a0a0a', b.theme_accent || '#c8a96e', b.theme_text || '#fafafa', b.glow);
     elBrandGrid().style.display = 'none';
@@ -749,6 +843,7 @@
     if (brand) openBrand(brand, false);
     else if (view === 'hair') showHair(false);
     else if (view === 'clothing') showBrands(false);
+    else if (view === 'saved') showSaved(false);
     else showAll(false);
     if (product && byId(product)) openProduct(product, false); else hidePDP();
   }
@@ -785,6 +880,7 @@
         <div class="product-img" style="cursor:pointer" onclick="openProduct('${p.id}')">
           ${imgHtml}
           <span class="product-cat-badge">${p.category}</span>
+          <button class="wish-btn ${isWished(p.id) ? 'saved' : ''}" data-id="${p.id}" onclick="toggleWish('${p.id}', event)" aria-label="${isWished(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}">${isWished(p.id) ? '♥' : '♡'}</button>
         </div>
         <div class="product-info">
           <div class="product-name" style="cursor:pointer" onclick="openProduct('${p.id}')">${escHtml(p.name)}</div>
@@ -1260,6 +1356,7 @@
   });
 
   updateCartUI();
+  updateSavedCount();
   renderFAQ();
   loadProducts();
 </script>
