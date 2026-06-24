@@ -828,7 +828,7 @@
     if (!b) return showBrands(push);
     clearSearchInput(); clearBrandTimers();
     currentCategory = 'brand'; currentBrand = id; setActiveFilter('clothing');
-    applyTheme(b.theme_bg || '#0a0a0a', b.theme_accent || '#c8a96e', b.theme_text || '#fafafa', b.glow);
+    applyTheme(...autoPalette(b.theme_bg || '#0a0a0a'), b.glow);
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
     const hero = document.getElementById('banner-hero');
