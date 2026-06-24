@@ -339,16 +339,39 @@
   .theme-banner { margin: 0 auto 28px; max-width: 1200px; }
   .banner-back { background: none; border: none; color: inherit; cursor: pointer; font-size: 13px; opacity: 0.8; margin-bottom: 14px; padding: 0; }
   .banner-back:hover { opacity: 1; }
-  .banner-inner { display: flex; gap: 20px; align-items: center; }
-  /* lifestyle hero photo behind the brand intro */
-  .banner-hero.has-hero { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 300px; padding: 28px; display: flex; align-items: flex-end; background-size: cover; background-position: center 18%; }
-  .banner-hero.has-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--theme-bg) 94%, transparent), color-mix(in srgb, var(--theme-bg) 45%, transparent) 55%, color-mix(in srgb, var(--theme-bg) 12%, transparent)); }
+
+  /* Floating brand banner — pinned glassy bar showing logo + name (pulsefy-style) */
+  .brand-bar {
+    position: sticky; top: 12px; z-index: 30;
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 18px; margin-bottom: 18px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--theme-bg) 72%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid color-mix(in srgb, var(--theme-accent) 32%, transparent);
+    box-shadow: 0 10px 34px rgba(0,0,0,0.28);
+    animation: barIn 0.5s ease both;
+  }
+  @keyframes barIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+  .brand-bar-logo { width: 54px; height: 54px; object-fit: contain; border-radius: 12px; background: rgba(255,255,255,0.94); padding: 5px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+  .brand-bar-text { min-width: 0; }
+  .brand-bar .banner-tag { margin-bottom: 2px; }
+  .brand-bar .banner-name { font-size: 24px; }
+
+  .banner-tag { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-accent); }
+  .banner-name { font-family: var(--font); font-weight: 400; font-size: 30px; letter-spacing: 0.04em; line-height: 1.12; }
+  .banner-story { font-size: 14px; line-height: 1.65; max-width: 640px; opacity: 0.95; }
+
+  /* lifestyle hero photo — now clean, no logo overlaid on the picture */
+  .banner-hero.has-hero { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 280px; padding: 28px; display: flex; align-items: flex-end; background-size: cover; background-position: center 18%; }
+  .banner-hero.has-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--theme-bg) 94%, transparent), color-mix(in srgb, var(--theme-bg) 30%, transparent) 55%, transparent); }
   .banner-hero.has-hero .banner-inner { position: relative; z-index: 1; }
-  .banner-logo { width: 84px; height: 84px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.10); padding: 6px; flex-shrink: 0; }
-  .banner-tag { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-accent); margin-bottom: 4px; }
-  .banner-name { font-family: var(--font); font-weight: 400; font-size: 30px; letter-spacing: 0.04em; }
-  .banner-story { font-size: 14px; line-height: 1.65; max-width: 640px; margin-top: 8px; opacity: 0.9; }
-  @media (max-width: 560px) { .banner-hero.has-hero { min-height: 360px; } .banner-inner { flex-direction: column; align-items: flex-start; gap: 12px; } }
+  @media (max-width: 560px) {
+    .brand-bar { top: 8px; gap: 12px; padding: 10px 14px; }
+    .brand-bar-logo { width: 44px; height: 44px; }
+    .brand-bar .banner-name { font-size: 20px; }
+    .banner-hero.has-hero { min-height: 320px; }
+  }
 
   /* HAIR SPECS (PDP) — Alibaba listing style */
   .pdp-specs { margin: 4px 0 22px; }
@@ -417,14 +440,17 @@
   <!-- Themed banner for a brand or the hair category -->
   <div class="theme-banner" id="theme-banner" style="display:none">
     <button class="banner-back" onclick="backToBrands()">‹ All brands</button>
+    <!-- Floating brand banner: logo + name pinned on top, per brand clicked -->
+    <div class="brand-bar" id="brand-bar">
+      <img class="brand-bar-logo" id="banner-logo" alt="" style="display:none">
+      <div class="brand-bar-text">
+        <div class="banner-tag" id="banner-tag"></div>
+        <h2 class="banner-name" id="banner-name"></h2>
+      </div>
+    </div>
     <div class="banner-hero" id="banner-hero">
       <div class="banner-inner">
-        <img class="banner-logo" id="banner-logo" alt="" style="display:none">
-        <div>
-          <div class="banner-tag" id="banner-tag"></div>
-          <h2 class="banner-name" id="banner-name"></h2>
-          <p class="banner-story" id="banner-story"></p>
-        </div>
+        <p class="banner-story" id="banner-story"></p>
       </div>
     </div>
   </div>
