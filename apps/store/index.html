@@ -21,6 +21,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --black: #0a0a0a;
+    --matte-black: #2a2a2a;   /* soft matte black for the hero band */
     --white: #fafafa;
     --gold: #c8a96e;
     --gold-light: #e8c98a;
@@ -63,7 +64,7 @@
 
   /* HERO */
   .hero {
-    background: var(--black); color: var(--white); text-align: center;
+    background: var(--matte-black); color: var(--white); text-align: center;
     padding: 64px 24px;
   }
   .hero h1 { font-family: var(--font); font-size: clamp(28px, 6vw, 56px); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 12px; }
@@ -729,7 +730,8 @@
   }
 
   function showAll(push) {
-    currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearTheme(); clearBrandTimers();
+    currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearBrandTimers();
+    applyTheme('#f0dcc2', '#c2772f', '#3b2c1c', false);   // light matte orange
     elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
     // Clothing first, hair last
     const ordered = [...catalog].sort((a, b) => (a.category === 'hair' ? 1 : 0) - (b.category === 'hair' ? 1 : 0));
@@ -738,7 +740,8 @@
   }
 
   function showBrands(push) {
-    currentCategory = 'clothing'; currentBrand = null; setActiveFilter('clothing'); clearTheme();
+    currentCategory = 'clothing'; currentBrand = null; setActiveFilter('clothing');
+    applyTheme('#cddfe4', '#2c6a7d', '#173039', false);   // matte ocean blue
     elBanner().style.display = 'none'; elGrid().style.display = 'none';
     const bg = elBrandGrid(); bg.style.display = 'grid';
     bg.innerHTML = brands.length ? brands.map((b, i) => brandCardHTML(b, i)).join('')
@@ -749,16 +752,16 @@
 
   function showHair(push) {
     currentCategory = 'hair'; currentBrand = null; setActiveFilter('hair'); clearBrandTimers();
-    applyTheme('#efd9dd', '#b06a7c', '#2a2024', false);
+    applyTheme('#eccdc6', '#b23a2e', '#3a1c17', false);   // matte red
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
     const hero = document.getElementById('banner-hero');
     hero.classList.remove('has-hero'); hero.style.backgroundImage = '';
     document.getElementById('banner-logo').style.display = 'none';
     document.querySelector('.banner-back').style.display = 'none';
-    document.getElementById('banner-tag').textContent = 'Hair';
-    document.getElementById('banner-name').textContent = 'Premium Hair';
-    document.getElementById('banner-story').textContent = '100% human-hair weaves & raw bundles — cuticle-aligned, dyeable and built to last. Tap a product for the full spec sheet.';
+    document.getElementById('banner-tag').textContent = 'Mane Muse · Your crown, your rules';
+    document.getElementById('banner-name').textContent = 'Mane Muse';
+    document.getElementById('banner-story').textContent = 'Mane Muse is our premium human-hair line — 100% cuticle-aligned raw bundles and weaves, ethically sourced, tangle-free and fully dyeable. Styled, washed and loved for years without the shed. Tap a product for the full spec sheet.';
     elGrid().style.display = 'grid';
     renderList(catalog.filter(p => p.category === 'hair'));
     if (push) pushView('?view=hair');
