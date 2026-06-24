@@ -309,13 +309,18 @@
   .brand-card.logo-card { aspect-ratio: 4/5; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); border: 1px solid color-mix(in srgb, var(--theme-text) 16%, transparent); }
   .brand-card.logo-card.glow { box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-accent) 45%, transparent), 0 0 28px color-mix(in srgb, var(--theme-accent) 30%, transparent); }
   .brand-card.logo-card.glow:hover { box-shadow: 0 0 0 1px var(--theme-accent), 0 0 38px color-mix(in srgb, var(--theme-accent) 45%, transparent); }
-  .bl-logo-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; min-height: 0; }
-  .bl-logo { max-width: 84%; max-height: 84%; object-fit: contain; transition: transform 0.5s ease; }
-  .brand-card:hover .bl-logo { transform: scale(1.05); }
-  .bl-meta { padding: 0 20px 22px; text-align: center; }
-  .bl-meta .b-name { font-family: var(--font); font-size: 21px; letter-spacing: 0.04em; color: var(--theme-text); }
-  .bl-meta .b-tag { font-size: 13px; margin-top: 2px; color: var(--theme-text); opacity: 0.78; }
-  .bl-meta .b-count { font-size: 11px; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--theme-accent); }
+  /* short brand story on top */
+  .bl-top { padding: 16px 18px 10px; }
+  .bl-top .b-name { font-family: var(--font); font-size: 19px; letter-spacing: 0.04em; color: var(--theme-text); }
+  .bl-top .b-story { font-size: 12px; line-height: 1.45; margin-top: 3px; color: var(--theme-text); opacity: 0.8; }
+  /* logo → clothing slideshow stage */
+  .bl-stage { flex: 1; position: relative; min-height: 0; overflow: hidden; }
+  .bl-slide { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.7s ease; }
+  .bl-slide.is-active { opacity: 1; }
+  .bl-slide--logo { object-fit: contain; padding: 22px; }
+  .bl-slide--photo { object-fit: cover; }
+  .bl-meta { padding: 10px 18px 16px; text-align: center; }
+  .bl-meta .b-count { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--theme-accent); }
 
   /* THEMED SHOP (brand / hair) */
   .products-section.themed { background: var(--theme-bg); color: var(--theme-text); margin: 0; padding: 32px 24px 64px; max-width: none; }
@@ -591,7 +596,7 @@
   }
 
   function showAll(push) {
-    currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearTheme();
+    currentCategory = 'all'; currentBrand = null; setActiveFilter('all'); clearTheme(); clearBrandTimers();
     elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
     // Clothing first, hair last
     const ordered = [...catalog].sort((a, b) => (a.category === 'hair' ? 1 : 0) - (b.category === 'hair' ? 1 : 0));
@@ -605,11 +610,12 @@
     const bg = elBrandGrid(); bg.style.display = 'grid';
     bg.innerHTML = brands.length ? brands.map((b, i) => brandCardHTML(b, i)).join('')
       : '<div class="empty"><h3>No brands yet</h3><p>Check back soon.</p></div>';
+    initBrandSlideshows();
     if (push) pushView('?view=clothing');
   }
 
   function showHair(push) {
-    currentCategory = 'hair'; currentBrand = null; setActiveFilter('hair');
+    currentCategory = 'hair'; currentBrand = null; setActiveFilter('hair'); clearBrandTimers();
     applyTheme('#efd9dd', '#b06a7c', '#2a2024', false);
     elBrandGrid().style.display = 'none';
     const banner = elBanner(); banner.style.display = 'block';
@@ -628,6 +634,7 @@
   function openBrand(id, push = true) {
     const b = brands.find(x => x.id === id);
     if (!b) return showBrands(push);
+    clearBrandTimers();
     currentCategory = 'brand'; currentBrand = id; setActiveFilter('clothing');
     applyTheme(b.theme_bg || '#0a0a0a', b.theme_accent || '#c8a96e', b.theme_text || '#fafafa', b.glow);
     elBrandGrid().style.display = 'none';
@@ -660,19 +667,52 @@
     grid.innerHTML = list.map((p, i) => productCardHTML(p, i)).join('');
   }
 
+  // images for a brand's slideshow: lifestyle hero, then each product photo
+  function brandSlides(b) {
+    const photos = [];
+    if (b.hero_image) photos.push(b.hero_image);
+    catalog.filter(p => p.brand_id === b.id).forEach(p => { if (p.images && p.images[0]) photos.push(p.images[0]); });
+    return [...new Set(photos)];
+  }
+
   function brandCardHTML(b, i) {
     const delay = Math.min(i, 9) * 0.06;
     const count = catalog.filter(p => p.brand_id === b.id).length;
     const label = b.gender && b.gender !== 'unisex' ? `${b.name} · ${b.gender}` : b.name;
-    const logo = b.logo_image ? `<img class="bl-logo" src="${escHtml(b.logo_image)}" alt="${escHtml(label)}" loading="lazy">` : '';
+    const story = b.tagline || (b.story || '').split('.')[0];
+    const logoSlide = b.logo_image ? `<img class="bl-slide bl-slide--logo is-active" src="${escHtml(b.logo_image)}" alt="${escHtml(label)}">` : '';
+    const photoSlides = brandSlides(b).map(src => `<img class="bl-slide bl-slide--photo" src="${escHtml(src)}" alt="" loading="lazy">`).join('');
     const countTxt = count ? `${count} ${count === 1 ? 'piece' : 'pieces'} · Shop ›` : 'Dropping soon';
     return `<div class="brand-card logo-card ${b.glow ? 'glow' : ''}" style="--theme-bg:${escHtml(b.theme_bg || '#0a0a0a')};--theme-accent:${escHtml(b.theme_accent || '#c8a96e')};--theme-text:${escHtml(b.theme_text || '#fafafa')};animation-delay:${delay}s" onclick="openBrand('${b.id}')">
-      <div class="bl-logo-wrap">${logo}</div>
-      <div class="bl-meta">
+      <div class="bl-top">
         <div class="b-name">${escHtml(label)}</div>
-        <div class="b-tag">${escHtml(b.tagline || '')}</div>
-        <div class="b-count">${escHtml(countTxt)}</div>
-      </div></div>`;
+        <div class="b-story">${escHtml(story)}</div>
+      </div>
+      <div class="bl-stage" id="stage-${b.id}">${logoSlide}${photoSlides}</div>
+      <div class="bl-meta"><div class="b-count">${escHtml(countTxt)}</div></div>
+    </div>`;
+  }
+
+  // Each card: show the logo for 5s, then cross-fade through the clothing slides, looping
+  let brandTimers = [];
+  function clearBrandTimers() { brandTimers.forEach(t => clearTimeout(t)); brandTimers = []; }
+  function initBrandSlideshows() {
+    clearBrandTimers();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    brands.forEach(b => {
+      const stage = document.getElementById('stage-' + b.id);
+      if (!stage) return;
+      const slides = [...stage.querySelectorAll('.bl-slide')];
+      if (slides.length < 2) return;
+      let idx = 0;
+      const tick = () => {
+        slides[idx].classList.remove('is-active');
+        idx = (idx + 1) % slides.length;
+        slides[idx].classList.add('is-active');
+        brandTimers.push(setTimeout(tick, idx === 0 ? 5000 : 3000)); // logo lingers 5s
+      };
+      brandTimers.push(setTimeout(tick, 5000)); // hold the logo first
+    });
   }
 
   // ── URL routing (shareable views + back button) ────────────────────────────
