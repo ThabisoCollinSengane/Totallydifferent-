@@ -45,20 +45,25 @@ dial back toward lighter smoked colours:
 
 ## 2. Current colours & where they live
 
-### a) Per-tab themes — `apps/store/index.html` (JS, ~lines 749 / 759 / 770)
-Set via `applyTheme(bg, accent, text, glow)` inside `showAll`, `showBrands`, `showHair`:
+### a) Per-tab themes — token-driven + auto-derived (`apps/store/index.html`)
+Each tab now sets only a **base background token**; the accent and text are
+**derived automatically** by `autoPalette()` (design-system rule: accent = same
+hue, higher saturation + brightness; text = light on dark bg / dark on light bg):
 
 ```js
-// showAll()      — "All" tab
-applyTheme('#1c1712', '#cf9a55', '#ece0d0', false);  // dark smoked ember   (darkest)
-// showBrands()   — "Clothing" tab
-applyTheme('#121f1e', '#74b2b8', '#dceae9', false);  // dark smoked ocean
-// showHair()     — "Hair" tab
-applyTheme('#1e120f', '#cc6f60', '#f0dcd6', false);  // dark smoked ember-red
+// showAll()    → applyAutoTheme('--primary-bg', false)   // All  (darkest)
+// showBrands() → applyAutoTheme('--clothing-bg', false)  // Clothing
+// showHair()   → applyAutoTheme('--hair-bg', false)      // Hair
 ```
-Argument order: **background, accent (prices/buttons), text, glow(bool)**.
-These three drive the CSS variables `--theme-bg / --theme-accent / --theme-text`
-used by `.products-section.themed` and its cards.
+The base tokens live in `:root`:
+```css
+--primary-bg: #1c1712;   /* All  — dark smoked ember */
+--clothing-bg: #121f1e;  /* Clothing — dark smoked ocean */
+--hair-bg: #1e120f;      /* Hair — dark smoked ember-red */
+```
+To recolour a tab, **change only its base token** — the accent/text follow.
+(`applyTheme(bg, accent, text, glow)` still exists for fully-manual control, e.g.
+brand pages, and drives `--theme-bg / --theme-accent / --theme-text`.)
 
 ### b) Hero band — `:root` var + `.hero` (~lines 24 & 67)
 ```css
@@ -98,6 +103,15 @@ update brands set theme_bg='#…', theme_accent='#…', theme_text='#…' where 
 ### e) Global brand palette — `:root` (~lines 23–30)
 `--black #0a0a0a` · `--matte-black #2a2a2a` · `--white #fafafa` ·
 `--gold #c8a96e` · `--gold-light #e8c98a` · `--grey #888`.
+
+### f) Design-system tokens — `:root`
+Per the design-system handover, non-colour tokens are defined as variables:
+- **Spacing:** `--space-xs 8px` · `--space-sm 16px` · `--space-md 24px` · `--space-lg 32px`
+- **Typography:** `--weight-title 700` · `--weight-body 400` · `--fs-title 1.25rem` · `--fs-body 0.95rem` · `--fs-meta 0.78rem`
+- **Motion:** `--trans 180ms ease-out` · `--anim-card 220ms` (cards fade-in + slide-up via `@keyframes cardIn`, within the 150–250ms ease-out rule)
+
+**UI kit:** product/brand cards follow Image → Title → Value → CTA; buttons are
+Primary (accent fill, `.add-btn`/`.hero-cta`) or Secondary (outlined, `.filter-btn`).
 
 ---
 
