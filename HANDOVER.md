@@ -149,10 +149,30 @@ See `.env.example`. Add all in Vercel → Settings → Environment Variables.
 
 ```bash
 npm install
-npm test     # 42 tests, must pass before any push to main
+npm test          # 50 unit + API + integration tests (mock Supabase, no network)
+npm run test:e2e  # opt-in Playwright E2E (see below)
 ```
 
-Tests mock Supabase — no real network or credentials needed.
+`npm test` mocks Supabase — no real network or credentials needed. It runs
+`tests/unit.test.js`, `tests/api.test.js`, and `tests/integration.test.js`
+(cross-cutting flows: pricing, R750 free-shipping threshold, stock guard,
+confirm short-circuit).
+
+**End-to-end (Playwright):** opt-in, not part of `npm test`.
+```bash
+npm install
+npx playwright install chromium
+npm run test:e2e                              # targets production by default
+BASE_URL=http://localhost:3000 npm run test:e2e   # or a local/preview URL
+```
+Specs live in `tests/e2e/`; config in `playwright.config.js`. They run against
+`BASE_URL` (production by default), so no local server is required.
+
+**Error monitoring:** `api/shared.js` exports `captureError()`, called by the
+top-level handler guard in `api/index.js`. It always logs to stderr and, when
+`SENTRY_DSN` is set, also reports to Sentry (fire-and-forget — never blocks a
+request). The storefront loads the Sentry browser SDK only when
+`window.SENTRY_DSN` is set, so it's a no-op until you opt in.
 
 ---
 
@@ -167,17 +187,21 @@ Tests mock Supabase — no real network or credentials needed.
 
 ## 10. Suggested next upgrades
 
-These are open opportunities, not committed work:
+Already shipped from the upgrade plan: live search, wishlist, persistent cart,
+product recommendations, WebP images (~50% lighter) with original fallback,
+immutable CDN cache headers, hero value-prop + CTA, server + browser error
+monitoring (Sentry-ready), and integration + E2E test coverage.
+
+Still open opportunities, not committed work:
 
 - **UI polish (build step 5–7):** add-to-cart bounce, slide transitions,
   CTA loading states — see `CLAUDE.md` build order.
-- **Image weight:** brand logos/heroes are large (Kookies logo ≈ 1.6 MB).
-  Convert to WebP/AVIF and add responsive `srcset` to cut load time.
+- **AVIF images:** add AVIF alongside WebP for a further size cut.
 - **Product detail page:** richer galleries, size guides, related-product logic.
-- **Search & filtering:** text search and price/size filters across the catalog.
+- **Price/size filters:** structured facets on top of the text search.
 - **Accessibility:** focus states, ARIA on the cart/checkout flow, alt text audit.
 - **SEO:** per-brand/product meta tags, Open Graph images, sitemap.
-- **Analytics & error monitoring:** add a lightweight analytics + error tracker.
+- **Analytics:** a lightweight privacy-friendly analytics tracker.
 - **Admin UX:** inline stock editing, order status workflow, low-stock alerts.
 
 ---
@@ -186,6 +210,6 @@ These are open opportunities, not committed work:
 
 - Read this file first, then `CLAUDE.md` (build status & rules).
 - Entry points: `api/index.js` (backend), `apps/store/index.html` (frontend).
-- Run `npm test` to confirm the baseline (42 passing).
+- Run `npm test` to confirm the baseline (50 passing).
 - Live site to click through: https://totallydifferent.vercel.app
 - Repo to review: https://github.com/ThabisoCollinSengane/Totallydifferent-

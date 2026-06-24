@@ -169,4 +169,36 @@ function orderConfirmHtml({ order_ref, buyer_name, total }) {
 </body></html>`;
 }
 
-module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized };
+// ── Error monitoring (fire-and-forget) ────────────────────────────
+// Always logs to stderr. If SENTRY_DSN is set, also reports to Sentry.
+// Never throws — monitoring must never break a request.
+function captureError(err, context = {}) {
+  try {
+    console.error('[td-error]', err && err.stack ? err.stack : err, context);
+    const dsn = process.env.SENTRY_DSN;
+    if (!dsn || typeof fetch !== 'function') return;
+    const m = dsn.match(/^https:\/\/([^@]+)@([^/]+)\/(.+)$/);
+    if (!m) return;
+    const [, key, host, projectId] = m;
+    const payload = {
+      event_id: crypto.randomBytes(16).toString('hex'),
+      timestamp: new Date().toISOString(),
+      platform: 'node',
+      level: 'error',
+      logger: 'totallydifferent-api',
+      environment: process.env.VERCEL_ENV || 'production',
+      exception: { values: [{ type: (err && err.name) || 'Error', value: (err && err.message) || String(err) }] },
+      extra: context,
+    };
+    fetch(`https://${host}/api/${projectId}/store/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${key}, sentry_client=totallydifferent/1.0`,
+      },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  } catch (_) { /* monitoring must never throw */ }
+}
+
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, captureError };
