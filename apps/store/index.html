@@ -21,7 +21,9 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --black: #0a0a0a;
-    --matte-black: #2a2a2a;   /* soft matte black for the hero band */
+    --maroon: #4a2630;        /* matte maroon — light shaded (hero band) */
+    --maroon-deep: #2a141a;   /* matte maroon — dark shaded (All tab base + footer accents) */
+    --matte-black: var(--maroon);  /* hero band now a light-shaded matte maroon, not black */
     --white: #fafafa;
     --gold: #c8a96e;
     --gold-light: #e8c98a;
@@ -35,7 +37,7 @@
 
     /* ── Design tokens (see COLOUR_SCHEME.md / design system handover) ── */
     /* Smoked theme base backgrounds — accents/text are auto-derived in JS (autoPalette) */
-    --primary-bg: #1c1712;    /* All */
+    --primary-bg: #2a141a;    /* All — dark-shaded matte maroon (literal hex: read by autoPalette in JS) */
     --clothing-bg: #121f1e;   /* Clothing */
     --hair-bg: #1e120f;       /* Hair */
     /* Spacing scale */
@@ -49,6 +51,8 @@
   }
   html { scroll-behavior: smooth; }
   picture { display: contents; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  img { max-width: 100%; }
   body { font-family: var(--font-sans); background: var(--white); color: var(--black); min-height: 100vh; }
 
   /* HEADER */
@@ -123,7 +127,7 @@
   .products-section { padding: 32px 24px 64px; max-width: 1200px; margin: 0 auto; }
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
     gap: var(--space-md);
   }
   .product-card {
@@ -355,7 +359,7 @@
   }
 
   /* BRAND GRID — logo tiles on each brand's theme colour */
-  .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
   .brand-card { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; opacity: 0; animation: cardIn var(--anim-card) ease-out forwards; transition: transform var(--trans), box-shadow var(--trans); }
   .brand-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.18); }
   .brand-card.logo-card { aspect-ratio: 4/5; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); border: 1px solid color-mix(in srgb, var(--theme-text) 16%, transparent); }
@@ -910,7 +914,7 @@
         slides[idx].classList.remove('is-active');
         idx = (idx + 1) % slides.length;
         slides[idx].classList.add('is-active');
-        brandTimers.push(setTimeout(tick, idx === 0 ? 10000 : 3000)); // logo lingers 10s
+        brandTimers.push(setTimeout(tick, 10000)); // every slide holds for a full 10s
       };
       brandTimers.push(setTimeout(tick, 10000)); // hold the logo first for 10s
     });
