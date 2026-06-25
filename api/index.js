@@ -14,7 +14,7 @@
 //   GET  /api/reviews?product=    → Reviews Engine
 //   POST /api/reviews             → Reviews Engine
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, captureError } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, verifySupabaseUser, isEmailAllowedAdmin, captureError } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
@@ -209,6 +209,17 @@ const handler = async (req, res) => {
     const { username, password } = req.body || {};
     if (!checkAdminCredentials(username, password)) return json(res, 401, { error: 'Invalid username or password' });
     return json(res, 200, { token: signAdminSession(), expires_in: 12 * 60 * 60 });
+  }
+
+  // Google sign-in → verify the Supabase access token, check the email
+  // allow-list, then issue the same short-lived admin session token.
+  if (url === '/admin/google' && req.method === 'POST') {
+    const { access_token } = req.body || {};
+    if (!access_token) return json(res, 400, { error: 'access_token required' });
+    const user = await verifySupabaseUser(access_token);
+    if (!user) return json(res, 401, { error: 'Could not verify Google sign-in' });
+    if (!isEmailAllowedAdmin(user.email)) return json(res, 403, { error: 'not_authorized' });
+    return json(res, 200, { token: signAdminSession(), expires_in: 12 * 60 * 60, email: user.email });
   }
 
   const adminToken = (req.headers.authorization || '').replace('Bearer ', '');

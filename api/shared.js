@@ -131,6 +131,32 @@ function isAdminAuthorized(token) {
   return verifyAdminSession(token);
 }
 
+// ── Google sign-in via Supabase Auth ─────────────────────────────────────────
+// The browser does Google OAuth through Supabase and gets a Supabase access
+// token. We verify that token by asking Supabase whose it is, then gate on an
+// email allow-list before issuing our own admin session. The service key still
+// never touches the browser — Google is just another way to prove identity.
+async function verifySupabaseUser(accessToken) {
+  if (!accessToken || !SUPA_URL || !SUPA_ANON) return null;
+  try {
+    const r = await fetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${accessToken}` },
+    });
+    if (!r.ok) return null;
+    const user = await r.json();
+    return user && user.email ? user : null;
+  } catch { return null; }
+}
+
+// Comma-separated ADMIN_ALLOWED_EMAILS — only these Google accounts get admin.
+function isEmailAllowedAdmin(email) {
+  if (!email) return false;
+  const list = (process.env.ADMIN_ALLOWED_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!list.length) return false;
+  return list.includes(String(email).toLowerCase());
+}
+
 // Decrement stock atomically after confirmed payment
 async function decrementStock(lines) {
   for (const line of lines) {
@@ -201,4 +227,4 @@ function captureError(err, context = {}) {
   } catch (_) { /* monitoring must never throw */ }
 }
 
-module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, captureError };
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, verifySupabaseUser, isEmailAllowedAdmin, captureError };
