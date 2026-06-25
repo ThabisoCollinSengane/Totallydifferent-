@@ -206,6 +206,40 @@
   .error-msg.visible { display: block; }
   .secure-note { text-align: center; font-size: 11px; color: var(--grey); margin-top: 10px; }
 
+  /* ANIMATIONS */
+  @keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    40%       { transform: scale(1.45); }
+    70%       { transform: scale(0.88); }
+  }
+  .cart-count.bounce { animation: bounce 0.4s cubic-bezier(.36,.07,.19,.97); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .product-card {
+    animation: fadeUp 0.38s ease both;
+    animation-delay: calc(var(--card-i, 0) * 60ms);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .pay-btn .btn-spinner {
+    display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-left: 8px;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: var(--white);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  .pay-btn.success { background: #27ae60; }
+  .pay-btn.success:hover { background: #27ae60; }
+
+  @keyframes filterFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .products-grid.filtering .product-card { animation: filterFade 0.28s ease both; }
+
   /* TOAST */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -360,11 +394,13 @@
       grid.innerHTML = '<div class="empty"><h3>Nothing here yet</h3><p>Check back soon.</p></div>';
       return;
     }
-    grid.innerHTML = products.map(p => productCardHTML(p)).join('');
+    grid.classList.add('filtering');
+    grid.innerHTML = products.map((p, i) => productCardHTML(p, i)).join('');
+    requestAnimationFrame(() => grid.classList.remove('filtering'));
   }
 
-  function productCardHTML(p) {
-    const variants = p.variants || [];
+  function productCardHTML(p, idx) {
+    const variants = p.product_variants || [];
     const firstVariant = variants[0];
     const imgHtml = (p.images && p.images[0])
       ? `<img src="${escHtml(p.images[0])}" alt="${escHtml(p.name)}" loading="lazy">`
@@ -388,7 +424,7 @@
       : p.base_price;
 
     return `
-      <div class="product-card" id="card-${p.id}">
+      <div class="product-card" id="card-${p.id}" style="--card-i:${idx ?? 0}">
         <div class="product-img">
           ${imgHtml}
           <span class="product-cat-badge">${p.category}</span>
@@ -468,6 +504,11 @@
     const countEl = document.getElementById('cart-count');
     countEl.textContent = count;
     countEl.classList.toggle('visible', count > 0);
+    if (count > 0) {
+      countEl.classList.remove('bounce');
+      void countEl.offsetWidth; // reflow to restart animation
+      countEl.classList.add('bounce');
+    }
     renderCartItems();
   }
 
@@ -608,7 +649,7 @@
     }
 
     payBtn.disabled = true;
-    payBtn.textContent = 'Creating order…';
+    payBtn.innerHTML = 'Creating order… <span class="btn-spinner"></span>';
 
     try {
       const res = await fetch(`${API}/checkout/init`, {
@@ -625,15 +666,19 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Checkout failed');
 
+      payBtn.classList.add('success');
+      payBtn.innerHTML = '✓ Redirecting to Paystack…';
+
       localStorage.removeItem('td_cart');
       cart = [];
       updateCartUI();
 
-      window.location.href = data.payment_url;
+      setTimeout(() => { window.location.href = data.authorization_url; }, 600);
     } catch (e) {
       errEl.textContent = e.message;
       errEl.classList.add('visible');
       payBtn.disabled = false;
+      payBtn.className = 'pay-btn';
       payBtn.textContent = 'Pay with Paystack';
     }
   }
