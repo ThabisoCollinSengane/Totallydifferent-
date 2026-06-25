@@ -435,15 +435,17 @@
   .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
   .brand-card { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; opacity: 0; animation: cardIn var(--anim-card) ease-out forwards; transition: transform var(--trans), box-shadow var(--trans); }
   .brand-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.18); }
-  .brand-card.logo-card { aspect-ratio: 4/5; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); border: 1px solid color-mix(in srgb, var(--theme-text) 16%, transparent); }
+  .brand-card.logo-card { display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); border: 1px solid color-mix(in srgb, var(--theme-text) 16%, transparent); }
   .brand-card.logo-card.glow { box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-accent) 45%, transparent), 0 0 28px color-mix(in srgb, var(--theme-accent) 30%, transparent); }
   .brand-card.logo-card.glow:hover { box-shadow: 0 0 0 1px var(--theme-accent), 0 0 38px color-mix(in srgb, var(--theme-accent) 45%, transparent); }
-  /* logo → clothing slideshow stage — takes most of the card */
-  .bl-stage { flex: 1; position: relative; min-height: 0; overflow: hidden; }
-  .bl-slide { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.7s ease; }
+  /* The logo image sets the card's height so it fills its panel exactly —
+     shown at its true width/height, never letterboxed and never cropped. */
+  .bl-stage { position: relative; overflow: hidden; min-height: 120px; }
+  .bl-slide { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.7s ease; object-fit: cover; }
   .bl-slide.is-active { opacity: 1; }
-  /* whole logo always fits inside the card — never cropped or overflowing */
-  .bl-slide--logo { object-fit: contain; padding: 10px; }
+  /* logo is in-flow (relative) → its natural ratio defines the panel height */
+  .bl-slide--logo { position: relative; display: block; width: 100%; height: auto; }
+  /* product photos overlay that same panel during the slideshow */
   .bl-slide--photo { object-fit: cover; }
   /* caption under the logo: brand name + tagline */
   .bl-top { padding: 12px 18px 4px; text-align: center; }
