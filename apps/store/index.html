@@ -232,6 +232,27 @@
     background: rgba(20,12,15,0.62); color: var(--cream); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
   }
 
+  /* SOCIAL PROOF on cards — real approved ratings only, hidden when none */
+  .card-rating { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; }
+  .card-rating .stars { color: var(--gold); letter-spacing: 1px; }
+  .card-rating .rating-count { color: var(--cream-muted); }
+  /* Honest scarcity — driven by real stock, never a fake countdown */
+  .low-stock { font-size: 11px; color: #e8a39a; letter-spacing: 0.04em; margin-bottom: 10px; }
+
+  /* FREE-DELIVERY PROGRESS — extra costs at checkout are the #1 reason carts
+     are abandoned, so show the real R750 threshold and progress toward it. */
+  .ship-progress { margin-bottom: 12px; }
+  .ship-msg { font-size: 12px; color: var(--cream-muted); margin-bottom: 7px; }
+  .ship-msg strong { color: var(--gold); }
+  .ship-msg.unlocked { color: var(--gold); }
+  .ship-bar { height: 5px; border-radius: 999px; background: var(--studio-raised); overflow: hidden; }
+  .ship-fill { height: 100%; background: var(--gold); border-radius: 999px; transition: width 320ms ease-out; }
+
+  /* Reassurance at the payment step — card-data distrust is a top-5 drop-off */
+  .checkout-assure { display: grid; gap: 7px; margin: 14px 0 4px; font-size: 11.5px; color: var(--cream-muted); }
+  .checkout-assure span { display: flex; align-items: center; gap: 8px; }
+  .checkout-assure svg { color: var(--gold); flex-shrink: 0; }
+
   /* TRUST BAR — reduces purchase hesitation, sits under the hero */
   .trust-bar {
     display: flex; justify-content: center; align-items: center; gap: 10px 32px; flex-wrap: wrap;
@@ -812,6 +833,13 @@
         <label>Delivery Address</label>
         <textarea id="buyer-address" placeholder="123 Main Street, Durban, 4001"></textarea>
       </div>
+      <!-- Distrust of entering card details is a top-5 checkout drop-off; say
+           plainly who takes the payment and what happens if it goes wrong. -->
+      <div class="checkout-assure">
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Payment is taken by Paystack — your card details never reach our servers</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>14-day returns on unworn items</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 10h4l3 3v4h-7z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>Delivered in 2–5 working days, tracked</span>
+      </div>
       <button class="pay-btn" id="pay-btn" onclick="submitCheckout()">Pay with Paystack</button>
       <p class="secure-note">🔒 Secure payment via Paystack · ZAR only</p>
     </div>
@@ -840,16 +868,23 @@
 
   let brands = [];
   let currentBrand = null;
+  let reviewSummary = {};   // product_id → { avg, count }, from approved reviews only
+
+  const SKELETON = Array.from({ length: 8 }, () =>
+    '<div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>').join('');
 
   async function loadProducts() {
     const grid = document.getElementById('products-grid');
-    grid.innerHTML = '<div class="loading">Loading products…</div>';
+    grid.innerHTML = SKELETON;
     try {
-      const [pRes, bRes] = await Promise.all([fetch(`${API}/products`), fetch(`${API}/brands`)]);
+      const [pRes, bRes, rRes] = await Promise.all([
+        fetch(`${API}/products`), fetch(`${API}/brands`), fetch(`${API}/reviews/summary`),
+      ]);
       const pData = await pRes.json();
       if (!pRes.ok) throw new Error(pData.error || 'Failed to load');
       catalog = pData.products || [];
       try { brands = (await bRes.json()).brands || []; } catch { brands = []; }
+      try { reviewSummary = (await rRes.json()).summary || {}; } catch { reviewSummary = {}; }
       updateDealsCount();
       routeFromUrl();
     } catch (e) {
@@ -1180,6 +1215,19 @@
     const delay = Math.min(index, 11) * 0.05;
     const off = bestOff(p);
     const available = hasStock(p);
+    // Social proof: only ever real, approved reviews — nothing is invented
+    const rv = reviewSummary[p.id];
+    // floor, not round: a 4.7 shows four full stars, never five. The exact
+    // average sits next to it, so the rating is never over-claimed.
+    const full = rv ? Math.floor(rv.avg) : 0;
+    const ratingHtml = rv ? `<div class="card-rating" title="${rv.avg} out of 5 from ${rv.count} review${rv.count === 1 ? '' : 's'}">
+            <span class="stars" aria-hidden="true">${'★'.repeat(full)}${'☆'.repeat(5 - full)}</span>
+            <span class="rating-count">${rv.avg} (${rv.count})</span>
+          </div>` : '';
+    // Honest scarcity: surfaced from real stock, and only when it's genuinely low
+    const unitsLeft = variants.reduce((s, v) => s + (v.stock || 0), 0);
+    const lowHtml = available && unitsLeft > 0 && unitsLeft <= 5
+      ? `<div class="low-stock">Only ${unitsLeft} left</div>` : '';
     // A single in-stock variant is pre-selected, so the shopper can add straight
     // from the grid instead of being blocked by a disabled "Select a variant".
     const only = variants.length === 1 && variants[0].stock > 0 ? variants[0] : null;
@@ -1210,7 +1258,9 @@
         </div>
         <div class="product-info">
           <div class="product-name" style="cursor:pointer" onclick="openProduct('${p.id}')">${escHtml(p.name)}</div>
+          ${ratingHtml}
           <div class="price-row" id="price-${p.id}">${priceInner(pi)}</div>
+          ${lowHtml}
           <div class="product-variants">${variantChips}</div>
           <button class="add-btn" id="add-${p.id}" onclick="addToCart('${p.id}')" ${only ? '' : 'disabled'}>
             ${!available ? 'Sold out' : only ? 'Add to Bag' : 'Select a variant'}
@@ -1661,7 +1711,21 @@
     const shipping = subtotal >= 750 ? 0 : 80;
     const total = subtotal + shipping;
 
+    // Progress toward the real R750 free-delivery threshold. Unexpected shipping
+    // cost is the single biggest reason carts are abandoned — so show the gap.
+    const FREE_SHIP = 750;
+    const toFree = Math.max(0, FREE_SHIP - subtotal);
+    const pct = Math.min(100, (subtotal / FREE_SHIP) * 100);
+    const shipProgress = `
+      <div class="ship-progress">
+        <div class="ship-msg${toFree ? '' : ' unlocked'}">${toFree
+          ? `Add <strong>R${toFree.toFixed(2)}</strong> more and delivery is free`
+          : '✓ You’ve unlocked free delivery'}</div>
+        <div class="ship-bar"><div class="ship-fill" style="width:${pct}%"></div></div>
+      </div>`;
+
     document.getElementById('cart-subtotals').innerHTML = `
+      ${shipProgress}
       <div class="cart-row"><span>Subtotal</span><span>R${subtotal.toFixed(2)}</span></div>
       <div class="cart-row">
         <span>Delivery</span>
