@@ -317,6 +317,23 @@ const handler = async (req, res) => {
 
   // ── REVIEWS ENGINE ─────────────────────────────────────────
   // GET /api/reviews?product=<id>  — approved reviews for a product
+  // GET /api/reviews/summary — approved rating average + count per product.
+  // Powers the stars on grid cards (real social proof, never fabricated).
+  if (url === '/reviews/summary' && req.method === 'GET') {
+    const { data, error } = await sb().from('reviews')
+      .select('product_id, rating').eq('is_approved', true);
+    if (error) return json(res, 400, { error: error.message });
+    const totals = {};
+    for (const r of data || []) {
+      const t = totals[r.product_id] || (totals[r.product_id] = { count: 0, sum: 0 });
+      t.count++; t.sum += r.rating;
+    }
+    const summary = {};
+    for (const [id, t] of Object.entries(totals))
+      summary[id] = { count: t.count, avg: Math.round((t.sum / t.count) * 10) / 10 };
+    return json(res, 200, { summary });
+  }
+
   if (url === '/reviews' && req.method === 'GET') {
     if (!q.product) return json(res, 400, { error: 'product param required' });
     const { data, error } = await sb().from('reviews')
