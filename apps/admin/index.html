@@ -89,6 +89,7 @@
   .badge.on { background: #e7f6ee; color: var(--green); }
   .badge.off { background: #fdecea; color: var(--red); }
   .badge.feat { background: #f6efe0; color: var(--gold); }
+  .badge.sale { background: #fdecea; color: #b9544b; }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
 
   .variants { margin-top: 12px; border-top: 1px solid var(--grey-border); padding-top: 10px; }
@@ -362,11 +363,14 @@
             <div class="pname">${esc(p.name)}
               ${p.is_active ? '<span class="badge on">active</span>' : '<span class="badge off">hidden</span>'}
               ${p.is_featured ? '<span class="badge feat">featured</span>' : ''}
+              ${p.compare_at_price > p.base_price ? `<span class="badge sale">−${Math.round((p.compare_at_price - p.base_price) / p.compare_at_price * 100)}%</span>` : ''}
             </div>
             <div class="pmeta">${esc(p.id)} · ${esc(p.category)}${p.subcategory ? ' / ' + esc(p.subcategory) : ''}</div>
             <div class="actions">
               <label style="margin:0">Price R</label>
               <input type="number" value="${p.base_price}" id="price-${p.id}" style="width:100px">
+              <label style="margin:0" title="Original price, shown struck through on the store. Leave blank for no discount.">Was R</label>
+              <input type="number" value="${p.compare_at_price ?? ''}" id="was-${p.id}" style="width:100px" placeholder="—">
               <button class="btn btn-sm" onclick="savePrice('${p.id}')">Save price</button>
               <button class="btn btn-sm" onclick="toggleFlag('${p.id}','is_featured',${!p.is_featured})">${p.is_featured ? 'Unfeature' : 'Feature'}</button>
               <button class="btn btn-sm btn-danger" onclick="toggleFlag('${p.id}','is_active',${!p.is_active})">${p.is_active ? 'Hide' : 'Show'}</button>
@@ -428,8 +432,15 @@
     return data.product;
   }
 
+  // "Was" above the price puts the product in the store's Discounts tab.
   async function savePrice(id) {
-    try { await patchProduct(id, { base_price: parseFloat(val('price-' + id)) }); toast('Price updated'); loadProducts(); }
+    const was = val('was-' + id);
+    const base_price = parseFloat(val('price-' + id));
+    if (isNaN(base_price)) return toast('Enter a valid price', true);
+    const compare_at_price = was === '' ? null : parseFloat(was);
+    if (compare_at_price !== null && (isNaN(compare_at_price) || compare_at_price <= base_price))
+      return toast('“Was” must be higher than the price, or blank', true);
+    try { await patchProduct(id, { base_price, compare_at_price }); toast('Price updated'); loadProducts(); }
     catch (e) { toast(e.message, true); }
   }
 

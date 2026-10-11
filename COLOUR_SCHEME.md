@@ -61,6 +61,16 @@ The base tokens live in `:root`:
 --clothing-bg: #121f1e;  /* Clothing — dark smoked ocean */
 --hair-bg: #1e120f;      /* Hair — dark smoked ember-red */
 ```
+**House-gold accent rule:** the catalogue tabs (All / Clothing / Hair /
+Discounts) override the derived accent with the house `--gold`, so prices,
+CTAs and the smoke haze match the hero button and read premium. **Brand pages
+keep their own derived accent** — that colour *is* the brand. The rule lives in
+`applyAutoTheme()`; `openBrand()` deliberately bypasses it.
+
+`autoPalette()` caps the derived accent at `s+24 → 42%` / `l+32 → 54%`. The caps
+are deliberate: a muted accent reads premium, a saturated one reads candy. Keep
+them low if you retune.
+
 To recolour a tab, **change only its base token** — the accent/text follow.
 (`applyTheme(bg, accent, text, glow)` still exists for fully-manual control, e.g.
 brand pages, and drives `--theme-bg / --theme-accent / --theme-text`.)

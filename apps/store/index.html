@@ -58,6 +58,12 @@
     --grey-light: var(--studio-raised);
     --grey-border: var(--studio-border);
     --red: #e87060;
+    /* Discount / sale — brick red kept inside the maroon family so it reads premium */
+    --sale: #b9544b;
+    --sale-ink: #fff4f0;
+    /* Elevation — soft, deep shadows for a studio feel */
+    --shadow-sm: 0 2px 10px rgba(0,0,0,0.26);
+    --shadow-md: 0 10px 30px rgba(0,0,0,0.38);
     --radius: 4px;
     --font: 'Georgia', serif;
     --font-sans: system-ui, -apple-system, sans-serif;
@@ -67,6 +73,7 @@
     --primary-bg: #6e3a48;    /* All — lighter matte maroon (literal hex: read by autoPalette in JS) */
     --clothing-bg: #1f3534;   /* Clothing — lighter smoked ocean */
     --hair-bg: #34201b;       /* Hair — lighter smoked ember-red */
+    --deals-bg: #3d1f24;      /* Discounts — deep sale maroon */
     /* Spacing scale */
     --space-xs: 8px; --space-sm: 16px; --space-md: 24px; --space-lg: 32px;
     /* Typography scale */
@@ -129,6 +136,10 @@
   }
   .filter-btn:hover { border-color: var(--gold); color: var(--cream); }
   .filter-btn.active { background: var(--maroon); color: var(--cream); border-color: var(--maroon); }
+  /* Discounts tab — tinted so the offer reads at a glance */
+  .filter-btn.filter-deals { border-color: color-mix(in srgb, var(--sale) 55%, transparent); color: #e3a79e; }
+  .filter-btn.filter-deals:hover { border-color: var(--sale); color: var(--cream); }
+  .filter-btn.filter-deals.active { background: var(--sale); border-color: var(--sale); color: var(--sale-ink); }
   .filter-label { font-size: 12px; color: var(--cream-muted); margin-right: 4px; }
   /* Search box */
   .search-wrap { position: relative; margin-left: auto; display: flex; align-items: center; }
@@ -203,6 +214,54 @@
   .add-btn:hover { background: var(--maroon-mid); }
   .add-btn:disabled { background: #3a2530; cursor: not-allowed; color: var(--cream-muted); }
   .add-btn.added { background: var(--gold); color: var(--studio-base); animation: addPop 0.4s ease; }
+
+  /* PRICING + DISCOUNTS */
+  .price-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .product-price { margin-bottom: 0; }
+  .price-was { font-size: 13px; color: var(--cream-muted); text-decoration: line-through; opacity: 0.7; }
+  .price-off { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--sale-ink); background: var(--sale); padding: 2px 7px; border-radius: 999px; }
+  .sale-badge {
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    background: var(--sale); color: var(--sale-ink); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; padding: 4px 9px; border-radius: 999px; box-shadow: var(--shadow-sm);
+  }
+  /* category chip moves down when a sale badge is present */
+  .product-img.has-sale .product-cat-badge { top: 40px; }
+  .soldout-veil {
+    position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+    background: rgba(20,12,15,0.62); color: var(--cream); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+
+  /* TRUST BAR — reduces purchase hesitation, sits under the hero */
+  .trust-bar {
+    display: flex; justify-content: center; align-items: center; gap: 10px 32px; flex-wrap: wrap;
+    padding: 13px var(--space-md); background: var(--studio-surface);
+    border-bottom: 1px solid var(--studio-border);
+    font-size: 12px; letter-spacing: 0.05em; color: var(--cream-muted);
+  }
+  .trust-bar span { display: flex; align-items: center; gap: 8px; }
+  .trust-bar svg { color: var(--gold); flex-shrink: 0; }
+  /* two columns on phones so the bar stays compact instead of four tall rows */
+  @media (max-width: 640px) {
+    .trust-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 14px; justify-items: start; font-size: 11px; padding: 12px 16px; }
+  }
+
+  /* SKELETON LOADING — replaces the bare "Loading…" text */
+  .sk-card { border: 1px solid var(--studio-border); border-radius: var(--radius); overflow: hidden; background: var(--studio-surface); }
+  .sk-img { aspect-ratio: 3/4; }
+  .sk-line { height: 11px; border-radius: 3px; margin: 10px 16px; }
+  .sk-line.sm { width: 42%; }
+  .sk-img, .sk-line {
+    background: linear-gradient(90deg, var(--studio-raised) 25%, #4d313c 50%, var(--studio-raised) 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s linear infinite;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .sk-img, .sk-line { animation: none; } }
+
+  /* Visible keyboard focus everywhere (accessibility) */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--gold); outline-offset: 2px;
+  }
 
   /* ANIMATIONS */
   @keyframes cardIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
@@ -336,7 +395,9 @@
   .pdp-thumb.active { opacity: 1; border-color: var(--black); }
   .pdp-cat { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream-muted); margin-bottom: 8px; }
   .pdp-name { font-family: var(--font); font-size: 28px; font-weight: 400; margin-bottom: 8px; color: var(--cream); }
-  .pdp-price { font-size: 22px; color: var(--gold); font-weight: 600; margin-bottom: 16px; }
+  .pdp-price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .pdp-price .product-price { font-size: 22px; color: var(--gold); font-weight: 600; }
+  .pdp-price .price-was { font-size: 15px; }
   .pdp-desc { font-size: 14px; line-height: 1.65; color: var(--cream-muted); margin-bottom: 22px; }
   .pdp-section-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream-muted); margin-bottom: 8px; }
   .pdp-variants { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
@@ -580,11 +641,20 @@
   <div class="hero-badge">FREE DELIVERY OVER R750</div>
 </section>
 
+<!-- Trust bar — answers the three questions buyers hesitate on, before they ask -->
+<div class="trust-bar">
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 10h4l3 3v4h-7z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>Free delivery over R750</span>
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Secure Paystack checkout</span>
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Easy returns within 14 days</span>
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>Durban-designed &amp; tested</span>
+</div>
+
 <div class="filters">
   <span class="filter-label">SHOP</span>
   <button class="filter-btn active" data-cat="all" onclick="filterProducts('all')">All</button>
   <button class="filter-btn" data-cat="clothing" onclick="filterProducts('clothing')">Clothing</button>
   <button class="filter-btn" data-cat="hair" onclick="filterProducts('hair')">Hair</button>
+  <button class="filter-btn filter-deals" data-cat="deals" onclick="showDeals(true)">Discounts&#37;<span class="saved-count" id="deals-count"></span></button>
   <button class="filter-btn" data-cat="saved" onclick="showSaved(true)">♡ Saved<span class="saved-count" id="saved-count"></span></button>
   <div class="search-wrap">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -610,8 +680,15 @@
   <!-- Brand hero cards (Clothing menu) -->
   <div class="brand-grid" id="brand-grid" style="display:none"></div>
   <!-- Product grid (All / Hair / inside a brand) -->
-  <div class="products-grid" id="products-grid">
-    <div class="loading">Loading products…</div>
+  <div class="products-grid" id="products-grid" aria-busy="true" aria-label="Loading products">
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
+    <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
   </div>
 </main>
 
@@ -773,6 +850,7 @@
       if (!pRes.ok) throw new Error(pData.error || 'Failed to load');
       catalog = pData.products || [];
       try { brands = (await bRes.json()).brands || []; } catch { brands = []; }
+      updateDealsCount();
       routeFromUrl();
     } catch (e) {
       grid.innerHTML = `<div class="empty"><h3>Couldn't load products</h3><p>${e.message}</p></div>`;
@@ -816,14 +894,22 @@
   }
   function autoPalette(bg) {
     const { h, s, l } = hexToHsl(bg);
-    const accent = hslToHex(h, Math.min(s + 40, 58), Math.min(l + 50, 60));       // same hue, more saturated + brighter
+    // Same hue, lifted but deliberately capped: a muted accent reads premium,
+    // a saturated one reads candy. Keeps every theme in the smoked-matte family.
+    const accent = hslToHex(h, Math.min(s + 24, 42), Math.min(l + 32, 54));
     const text = l < 50 ? hslToHex(h, Math.min(Math.max(s, 14), 26), 90)          // dark bg → light text
                         : hslToHex(h, Math.max(s, 18), 12);                        // light bg → dark text
     return [bg, accent, text];
   }
   // Read a CSS token (e.g. '--primary-bg') from :root
   const token = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  function applyAutoTheme(bgToken, glow) { applyTheme(...autoPalette(token(bgToken)), glow); }
+  // House tabs (All / Clothing / Hair / Discounts) wear the house gold, so CTAs
+  // and prices match the hero button and read premium rather than candy.
+  // Brand pages keep their own derived accent — that colour IS the brand.
+  function applyAutoTheme(bgToken, glow) {
+    const [bg, , text] = autoPalette(token(bgToken));
+    applyTheme(bg, token('--gold') || '#d4b87e', text, glow);
+  }
 
   function clearSearchInput() {
     const el = document.getElementById('search-input');
@@ -860,6 +946,7 @@
     if (currentCategory === 'clothing') return showBrands(false);
     if (currentCategory === 'hair') return showHair(false);
     if (currentCategory === 'saved') return showSaved(false);
+    if (currentCategory === 'deals') return showDeals(false);
     return showAll(false);
   }
 
@@ -888,6 +975,17 @@
     const items = catalog.filter(p => wish.includes(p.id));
     renderList(items, 'No saved items yet — tap the ♡ on any product.');
     if (push) pushView('?view=saved');
+  }
+
+  // Everything currently discounted, biggest saving first
+  function showDeals(push) {
+    clearSearchInput();
+    currentCategory = 'deals'; currentBrand = null; setActiveFilter('deals'); clearBrandTimers();
+    applyAutoTheme('--deals-bg', false);
+    elBanner().style.display = 'none'; elBrandGrid().style.display = 'none'; elGrid().style.display = 'grid';
+    const items = dealsList().sort((a, b) => bestOff(b) - bestOff(a));
+    renderList(items, 'No discounts running right now — check back soon.');
+    if (push) pushView('?view=deals');
   }
 
   function showAll(push) {
@@ -966,6 +1064,7 @@
 
   function renderList(list, emptyMsg) {
     const grid = elGrid();
+    grid.setAttribute('aria-busy', 'false');
     if (!list.length) {
       grid.innerHTML = `<div class="empty"><h3>${escHtml(emptyMsg || 'Nothing here yet')}</h3><p>Check back soon.</p></div>`;
       return;
@@ -1030,50 +1129,91 @@
     else if (view === 'hair') showHair(false);
     else if (view === 'clothing') showBrands(false);
     else if (view === 'saved') showSaved(false);
+    else if (view === 'deals') showDeals(false);
     else showAll(false);
     if (product && byId(product)) openProduct(product, false); else hidePDP();
   }
 
+  // ── Pricing + discounts ────────────────────────────────────────────────────
+  // price_override / base_price is what's actually charged (and what the server
+  // recomputes). compare_at_price is only the "was" figure shown struck through,
+  // so a discount is purely presentational — it never changes the charged total.
+  const money = n => `R${Number(n).toFixed(2)}`;
+  function priceInfo(p, variant) {
+    const vs = p.product_variants || p.variants || [];
+    const v = variant || vs[0];
+    const now = (v && v.price_override != null) ? Number(v.price_override) : Number(p.base_price);
+    const rawWas = (v && v.compare_at_price != null) ? Number(v.compare_at_price)
+                 : (p.compare_at_price != null ? Number(p.compare_at_price) : null);
+    const was = (rawWas != null && rawWas > now) ? rawWas : null;
+    return { now, was, off: was ? Math.round((was - now) / was * 100) : 0, onSale: !!was };
+  }
+  // Markup for a price, with the struck-through "was" and the % saved when on sale
+  const priceInner = pi => `<span class="product-price">${money(pi.now)}</span>` +
+    (pi.onSale ? `<span class="price-was">${money(pi.was)}</span><span class="price-off">−${pi.off}%</span>` : '');
+  // A product counts as discounted if any of its variants (or its base price) is
+  const isOnSale = p => {
+    const vs = p.product_variants || p.variants || [];
+    return vs.length ? vs.some(v => priceInfo(p, v).onSale) : priceInfo(p).onSale;
+  };
+  const bestOff = p => {
+    const vs = p.product_variants || p.variants || [];
+    return Math.max(0, ...(vs.length ? vs.map(v => priceInfo(p, v).off) : [priceInfo(p).off]));
+  };
+  const hasStock = p => {
+    const vs = p.product_variants || p.variants || [];
+    return !vs.length || vs.some(v => v.stock > 0);
+  };
+  const dealsList = () => catalog.filter(isOnSale);
+  function updateDealsCount() {
+    const el = document.getElementById('deals-count');
+    if (el) { const n = dealsList().length; el.textContent = n ? ` (${n})` : ''; }
+  }
+
   function productCardHTML(p, index = 0) {
     const variants = p.product_variants || p.variants || [];
-    const firstVariant = variants[0];
     const imgs = p.images || [];
     const imgHtml = imgs[0]
       ? `${pic(imgs[0], `alt="${escHtml(p.name)}" loading="lazy"`)}${
           imgs[1] ? pic(imgs[1], 'class="img-alt" alt="" loading="lazy"') : ''}`
       : `<div class="product-img-placeholder">${p.category === 'hair' ? '✨' : '👕'}</div>`;
     const delay = Math.min(index, 11) * 0.05;
+    const off = bestOff(p);
+    const available = hasStock(p);
+    // A single in-stock variant is pre-selected, so the shopper can add straight
+    // from the grid instead of being blocked by a disabled "Select a variant".
+    const only = variants.length === 1 && variants[0].stock > 0 ? variants[0] : null;
+    const pi = priceInfo(p, only || variants[0]);
 
     const variantChips = variants.map(v => `
       <button
-        class="variant-chip${v.stock === 0 ? ' out-of-stock' : ''}"
+        class="variant-chip${v.stock === 0 ? ' out-of-stock' : ''}${only && v.id === only.id ? ' selected' : ''}"
         data-variant-id="${v.id}"
         data-product-id="${p.id}"
         data-label="${escHtml(v.label)}"
         data-price="${v.price_override ?? p.base_price}"
+        data-was="${v.compare_at_price ?? p.compare_at_price ?? ''}"
         data-stock="${v.stock}"
         onclick="selectVariant(this)"
         ${v.stock === 0 ? 'disabled title="Out of stock"' : ''}
       >${escHtml(v.label)}</button>
     `).join('');
 
-    const price = variants.length && firstVariant?.price_override
-      ? firstVariant.price_override
-      : p.base_price;
-
     return `
       <div class="product-card" id="card-${p.id}" style="animation-delay:${delay}s">
-        <div class="product-img" style="cursor:pointer" onclick="openProduct('${p.id}')">
+        <div class="product-img${off ? ' has-sale' : ''}" style="cursor:pointer" onclick="openProduct('${p.id}')">
           ${imgHtml}
+          ${off ? `<span class="sale-badge">−${off}%</span>` : ''}
           <span class="product-cat-badge">${p.category}</span>
           <button class="wish-btn ${isWished(p.id) ? 'saved' : ''}" data-id="${p.id}" onclick="toggleWish('${p.id}', event)" aria-label="${isWished(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}">${isWished(p.id) ? '♥' : '♡'}</button>
+          ${available ? '' : '<div class="soldout-veil">Sold out</div>'}
         </div>
         <div class="product-info">
           <div class="product-name" style="cursor:pointer" onclick="openProduct('${p.id}')">${escHtml(p.name)}</div>
-          <div class="product-price" id="price-${p.id}">R${price.toFixed(2)}</div>
+          <div class="price-row" id="price-${p.id}">${priceInner(pi)}</div>
           <div class="product-variants">${variantChips}</div>
-          <button class="add-btn" id="add-${p.id}" onclick="addToCart('${p.id}')" disabled>
-            Select a variant
+          <button class="add-btn" id="add-${p.id}" onclick="addToCart('${p.id}')" ${only ? '' : 'disabled'}>
+            ${!available ? 'Sold out' : only ? 'Add to Bag' : 'Select a variant'}
           </button>
         </div>
       </div>
@@ -1086,8 +1226,11 @@
     card.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
     btn.classList.add('selected');
 
-    const price = parseFloat(btn.dataset.price);
-    document.getElementById(`price-${productId}`).textContent = `R${price.toFixed(2)}`;
+    const now = parseFloat(btn.dataset.price);
+    const rawWas = btn.dataset.was ? parseFloat(btn.dataset.was) : NaN;
+    const was = !isNaN(rawWas) && rawWas > now ? rawWas : null;
+    document.getElementById(`price-${productId}`).innerHTML =
+      priceInner({ now, was, off: was ? Math.round((was - now) / was * 100) : 0, onSale: !!was });
 
     const addBtn = document.getElementById(`add-${productId}`);
     addBtn.disabled = false;
@@ -1381,7 +1524,7 @@
   function updatePdpPriceStock() {
     const p = pdpProduct;
     const v = variantsOf(p).find(x => x.id === pdpVariantId);
-    document.getElementById('pdp-price').textContent = 'R' + priceOf(p, v).toFixed(2);
+    document.getElementById('pdp-price').innerHTML = priceInner(priceInfo(p, v));
     document.getElementById('pdp-qty').textContent = pdpQty;
     const stockEl = document.getElementById('pdp-stock');
     const addBtn = document.getElementById('pdp-add');

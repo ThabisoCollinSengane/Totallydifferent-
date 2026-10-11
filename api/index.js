@@ -233,11 +233,11 @@ const handler = async (req, res) => {
   }
 
   if (url === '/admin/products' && req.method === 'POST') {
-    const { id, name, description, category, subcategory, base_price, images, is_featured, brand_id, specs } = req.body || {};
+    const { id, name, description, category, subcategory, base_price, compare_at_price, images, is_featured, brand_id, specs } = req.body || {};
     if (!id || !name || !category || base_price == null)
       return json(res, 400, { error: 'id, name, category, base_price required' });
     const { data, error } = await sb().from('products')
-      .insert({ id, name, description, category, subcategory, base_price, images: images || [], is_featured: is_featured || false, brand_id: brand_id || null, specs: specs || null })
+      .insert({ id, name, description, category, subcategory, base_price, compare_at_price: compare_at_price ?? null, images: images || [], is_featured: is_featured || false, brand_id: brand_id || null, specs: specs || null })
       .select().single();
     if (error) return json(res, 400, { error: error.message });
     return json(res, 201, { product: data });
@@ -246,7 +246,7 @@ const handler = async (req, res) => {
   // Update an existing product (images, price, flags, copy)
   const adminProductId = url.match(/^\/admin\/products\/([^/]+)$/)?.[1];
   if (adminProductId && req.method === 'PATCH') {
-    const allowed = ['name','description','category','subcategory','base_price','images','is_active','is_featured','brand_id','specs'];
+    const allowed = ['name','description','category','subcategory','base_price','compare_at_price','images','is_active','is_featured','brand_id','specs'];
     const patch = {};
     for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
     if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });
@@ -288,7 +288,7 @@ const handler = async (req, res) => {
   const adminVariantId = url.match(/^\/admin\/variants\/([^/]+)$/)?.[1];
   if (adminVariantId && req.method === 'PATCH') {
     const patch = {};
-    for (const k of ['label','stock','price_override','sku']) if (k in (req.body || {})) patch[k] = req.body[k];
+    for (const k of ['label','stock','price_override','compare_at_price','sku']) if (k in (req.body || {})) patch[k] = req.body[k];
     if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });
     const { data, error } = await sb().from('product_variants')
       .update(patch).eq('id', adminVariantId).select().single();
