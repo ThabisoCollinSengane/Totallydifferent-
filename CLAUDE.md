@@ -35,8 +35,14 @@ Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 
 ## DB Schema (Supabase)
 ```
-products          — id(text PK), name, category(clothing|hair), base_price, currency(ZAR), images[], is_active, is_featured
-product_variants  — id(uuid PK), product_id(FK), label, size, colour, volume, price_override, stock, sku(unique)
+products          — id(text PK), name, category(clothing|hair), base_price, compare_at_price, currency(ZAR), images[], is_active, is_featured
+product_variants  — id(uuid PK), product_id(FK), label, size, colour, volume, price_override, compare_at_price, stock, sku(unique)
+```
+`compare_at_price` is the "was" price shown struck through — a product is on sale
+(and appears in the storefront's **Discounts%** tab) when it is greater than the
+price actually charged. It is presentational only: `recomputeTotal()` still
+charges `price_override ?? base_price`, so a discount can never alter a total.
+```
 orders            — id(uuid PK), order_ref(unique), buyer_name, buyer_email, items(jsonb), subtotal, shipping_fee, total, status, paystack_ref
 ```
 
