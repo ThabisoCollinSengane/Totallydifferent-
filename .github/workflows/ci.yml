@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Unit, API and integration tests
+        run: npm test
+
+  secrets-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: No .env committed
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.local$|\.production$)'; then
+            echo "::error::.env file is committed (Hard Rule 4)"; exit 1
+          fi
+      - name: No server secrets in browser-served files
+        run: |
+          if grep -rnE 'SUPABASE_SERVICE_KEY|PAYSTACK_SECRET_KEY|sk_(live|test)_[A-Za-z0-9]{10,}|service_role' apps assets; then
+            echo "::error::Server secret referenced in a browser-served file (Hard Rule 3)"; exit 1
+          fi

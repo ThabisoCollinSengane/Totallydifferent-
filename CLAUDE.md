@@ -14,7 +14,7 @@ Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 1. ✅ Schema + seed data (`products` ×5, `product_variants` ×12, `orders`)
 2. ✅ API contract (10 endpoints defined)
 3. ✅ Backend logic — all 5 engines + Communication Engine
-4. ✅ Tests + validation — 35 tests, 0 failures (`npm test`)
+4. ✅ Tests + validation — 50 tests, 0 failures (`npm test`)
 5. ⬜ UI system (card-based, checkout flow)
 6. ⬜ Animations (bounce add-to-cart, slide transitions, CTA loading state)
 7. ⬜ Final polish
@@ -74,7 +74,7 @@ tests/api.test.js   — route handler tests (Supabase mocked, no real network)
 
 ## Running Tests
 ```bash
-npm test   # runs all 35 tests, must pass before any push to main
+npm test   # runs all 50 tests, must pass before any push to main
 ```
 
 ## Environment Variables
@@ -97,3 +97,19 @@ Do NOT mix env vars between the two projects.
 
 ## Owner
 Thabiso Collins Engane — thacollin2@gmail.com
+
+## Agent Team (`.claude/agents/`)
+| Agent | Use it for | Edits code? |
+|---|---|---|
+| `researcher` | Suppliers, DTF/hair sourcing, ZAR pricing, competitors, SA law/IP — cited briefs in `docs/research/` | No |
+| `checkout-guardian` | **Required** for any change to `api/`, `vercel.json`, checkout, prices, stock, Paystack or keys — audits the 9 Hard Rules | No |
+| `qa-tester` | Runs `npm test`, adds missing tests, runs Playwright E2E on request | Tests only |
+| `code-reviewer` | General pre-merge review: bugs, XSS, auth, data safety | No |
+| `ux-reviewer` | Mobile-first UI, conversion, accessibility, brand check for `apps/` changes | No |
+
+### Definition of done (every PR)
+1. `qa-tester`: `npm test` green, new behaviour has tests.
+2. `code-reviewer`: no open bugs/security findings.
+3. `checkout-guardian`: PASS (only if the money path was touched).
+4. `ux-reviewer`: no must-fix items (only if `apps/` changed).
+5. CI green on GitHub (tests + secrets guard) before merging to `main`.
