@@ -16,7 +16,7 @@ Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 3. ✅ Backend logic — all 5 engines + Communication Engine
 4. ✅ Tests + validation — 50 tests, 0 failures (`npm test`)
 5. ⬜ UI system (card-based, checkout flow)
-6. ⬜ Animations (bounce add-to-cart, slide transitions, CTA loading state)
+6. ✅ Animations (bounce add-to-cart, slide transitions, CTA loading state) — see "Design & motion skills"
 7. ⬜ Final polish
 
 ## API Contract
@@ -106,6 +106,32 @@ Thabiso Collins Engane — thacollin2@gmail.com
 | `qa-tester` | Runs `npm test`, adds missing tests, runs Playwright E2E on request | Tests only |
 | `code-reviewer` | General pre-merge review: bugs, XSS, auth, data safety | No |
 | `ux-reviewer` | Mobile-first UI, conversion, accessibility, brand check for `apps/` changes | No |
+
+## Design & motion skills
+| Skill | Where | Use it for |
+|---|---|---|
+| GSAP skills (official; skills MIT, library under GreenSock's standard licence) | `.claude/skills/gsap-*` (vendored, markdown only) | Any storefront animation — tweens, timelines, eases, reduced motion |
+| impeccable (Apache-2.0) | plugin — install yourself (below) | `/impeccable polish \| critique \| audit \| animate` before UI PRs |
+| hallmark (MIT) | plugin — install yourself (below) | Anti-"AI slop" review of new pages/sections |
+
+Install the two plugins (owner decision — they ship third-party scripts, so they are not auto-enabled):
+```
+/plugin marketplace add pbakaus/impeccable
+/plugin install impeccable@impeccable
+/plugin marketplace add Nutlope/hallmark
+/plugin install hallmark@hallmark
+```
+Hallmark's optional Together AI step needs `TOGETHER_API_KEY` — leave it unset; it is not needed.
+
+**Motion rules (storefront):**
+- GSAP is self-hosted at `/assets/vendor/gsap-3.12.5.min.js` (`defer`, optional). Every GSAP effect
+  must have a CSS fallback — the shop must work if the script fails to load.
+- Respect `prefers-reduced-motion`: no fly/bounce, no stagger, static spinner.
+- Add-to-cart: `flyFromEl()` returns `true` when GSAP ran; the bag bump then fires on landing, so callers do
+  `if (!flyFromEl(...)) bumpCart();` — never call both.
+- Buttons that wait on the network use `setBtnLoading(btn, on, label)` (spinner + `aria-busy`).
+- `html, body` use `overflow-x: clip` (not `hidden`) — `hidden` breaks the sticky header. Other sticky
+  elements must offset by `var(--header-h)` (60px) so they sit below it.
 
 ### Definition of done (every PR)
 1. `qa-tester`: `npm test` green, new behaviour has tests.

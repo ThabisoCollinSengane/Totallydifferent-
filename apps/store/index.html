@@ -35,6 +35,9 @@
     document.head.appendChild(s);
   }
 </script>
+<!-- GSAP (self-hosted, optional): powers the add-to-cart arc. If it fails to load,
+     the CSS animations below take over — nothing in the shop depends on it. -->
+<script src="/assets/vendor/gsap-3.12.5.min.js" defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -85,7 +88,8 @@
   }
   html { scroll-behavior: smooth; }
   picture { display: contents; }
-  html, body { max-width: 100%; overflow-x: hidden; }
+  /* clip (not hidden) so the sticky header keeps working; hidden is the fallback */
+  html, body { max-width: 100%; overflow-x: hidden; overflow-x: clip; }
   img { max-width: 100%; }
   body { font-family: var(--font-sans); background: var(--studio-base); color: var(--cream); min-height: 100vh; }
 
@@ -294,6 +298,34 @@
   .fly-img { position: fixed; width: 60px; height: 76px; border-radius: 4px; object-fit: cover; z-index: 500; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.25); animation: flyToCart 0.6s cubic-bezier(0.5,-0.3,0.7,0.6) forwards; }
   @media (prefers-reduced-motion: reduce) { .product-card, .cart-count.bump, .add-btn.added, .fly-img { animation: none !important; opacity: 1 !important; } }
 
+  /* MOTION v2 (step 6) — GSAP drives the add-to-cart arc when available; the CSS
+     above stays as the fallback if the script fails to load. Timing follows the
+     impeccable/animate guide: enter 300–500ms on a confident decel, exit faster. */
+  :root { --header-h: 60px; --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); --ease-in-quick: cubic-bezier(0.4, 0, 1, 1); }
+  .fly-img.gsap { animation: none; left: 0; top: 0; }
+  .cart-btn.landing { border-color: var(--gold); }
+  /* Drawers / overlays: slide in on expo-decel; the faster ease-in exit is on the base rules */
+  .cart-drawer.open { transition: transform 0.42s var(--ease-out-expo); }
+  .pdp-overlay.open .pdp { transition: transform 0.4s var(--ease-out-expo); }
+  .modal-overlay.open .modal { transition: transform 0.34s var(--ease-out-expo); }
+  /* Bag items slide in, capped stagger (set per item via --i) */
+  @keyframes itemIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+  .cart-drawer.items-in .cart-item { animation: itemIn 0.36s var(--ease-out-expo) both; animation-delay: calc(min(var(--i, 0), 6) * 45ms + 90ms); }
+  /* CTA loading state — spinner + live label, never a dead button */
+  .btn-loading { position: relative; cursor: progress !important; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .btn-loading::before {
+    content: ''; width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid currentColor; border-right-color: transparent; animation: btnSpin 0.7s linear infinite;
+  }
+  .checkout-btn.btn-loading:disabled { background: var(--gold); color: var(--black); }
+  .pay-btn.btn-loading:disabled { background: var(--black); color: var(--white); }
+  @keyframes btnSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .cart-drawer.items-in .cart-item { animation: none; }
+    .cart-drawer, .cart-drawer.open, .pdp, .pdp-overlay.open .pdp, .modal, .modal-overlay.open .modal { transition: none; }
+    .btn-loading::before { animation: none; border-right-color: currentColor; opacity: 0.6; }
+  }
+
   /* LOADING + EMPTY */
   .loading { text-align: center; padding: 64px 24px; color: var(--cream-muted); font-size: 14px; }
   .empty { text-align: center; padding: 64px 24px; }
@@ -309,7 +341,7 @@
   .cart-drawer {
     position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 100vw;
     background: var(--studio-surface); z-index: 201; transform: translateX(100%);
-    transition: transform 0.3s ease; display: flex; flex-direction: column;
+    transition: transform 0.24s var(--ease-in-quick); display: flex; flex-direction: column;
     box-shadow: -4px 0 32px rgba(0,0,0,0.5);
   }
   .cart-drawer.open { transform: translateX(0); }
@@ -353,7 +385,7 @@
   .modal-overlay.open { opacity: 1; pointer-events: all; }
   .modal {
     background: var(--studio-surface); border-radius: var(--radius); max-width: 480px; width: 100%;
-    max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.2s ease;
+    max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.18s var(--ease-in-quick);
     color: var(--cream);
   }
   .modal-overlay.open .modal { transform: scale(1); }
@@ -402,7 +434,7 @@
   body.no-scroll { overflow: hidden; }
   .pdp-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; opacity: 0; pointer-events: none; transition: opacity var(--trans); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .pdp-overlay.open { opacity: 1; pointer-events: all; }
-  .pdp { background: var(--studio-surface); color: var(--cream); max-width: 1080px; margin: 40px auto; border-radius: var(--radius); position: relative; transform: translateY(20px); transition: transform 0.3s ease; }
+  .pdp { background: var(--studio-surface); color: var(--cream); max-width: 1080px; margin: 40px auto; border-radius: var(--radius); position: relative; transform: translateY(20px); transition: transform 0.22s var(--ease-in-quick); }
   .pdp-overlay.open .pdp { transform: translateY(0); }
   .pdp-close { position: absolute; top: 14px; right: 14px; z-index: 2; background: var(--studio-raised); border: 1px solid var(--studio-border); color: var(--cream); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1; }
   .pdp-close:hover { border-color: var(--gold); }
@@ -575,7 +607,7 @@
 
   /* Floating brand banner — pinned glassy bar showing logo + name (pulsefy-style) */
   .brand-bar {
-    position: sticky; top: 12px; z-index: 30;
+    position: sticky; top: calc(var(--header-h) + 12px); z-index: 30;
     display: flex; align-items: center; gap: 16px;
     padding: 12px 18px; margin-bottom: 18px;
     border-radius: 16px;
@@ -598,7 +630,7 @@
   /* lifestyle hero photo — clean image; the story sits below it, not over it */
   .banner-hero.has-hero { overflow: hidden; border-radius: var(--radius); min-height: 300px; background-size: cover; background-position: center 18%; }
   @media (max-width: 560px) {
-    .brand-bar { top: 8px; gap: 12px; padding: 10px 14px; }
+    .brand-bar { top: calc(var(--header-h) + 8px); gap: 12px; padding: 10px 14px; }
     .brand-bar-logo { width: 44px; height: 44px; }
     .brand-bar .banner-name { font-size: 20px; }
     .banner-hero.has-hero { min-height: 240px; }
@@ -847,7 +879,7 @@
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
   const API = '/api';
@@ -1316,8 +1348,7 @@
     saveCart();
     updateCartUI();
     showToast(`${product.name} added to bag`);
-    flyToCart(card, product);
-    bumpCart();
+    if (!flyToCart(card, product)) bumpCart();
 
     const addBtn = document.getElementById(`add-${productId}`);
     addBtn.textContent = '✓ Added';
@@ -1329,19 +1360,25 @@
   }
 
   function flyToCart(card, product) {
-    flyFromEl(card.querySelector('.product-img img'), product);
+    return flyFromEl(card.querySelector('.product-img img'), product);
   }
 
-  // Animate an image flying from an element into the bag button
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Animate an image flying from an element into the bag button.
+  // Returns true when GSAP handled it — the bag bump then fires on landing
+  // (synced to impact) instead of immediately, so callers skip bumpCart().
   function flyFromEl(imgEl, product) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (reducedMotion()) return false;
     const src = (product.images && product.images[0]) || (imgEl && imgEl.src);
     const cartBtn = document.querySelector('.cart-btn');
-    if (!imgEl || !src || !cartBtn) return;
+    if (!imgEl || !src || !cartBtn) return false;
     const from = imgEl.getBoundingClientRect();
     const to = cartBtn.getBoundingClientRect();
     const fly = document.createElement('img');
     fly.src = src;
+    fly.alt = '';
+    if (window.gsap) return gsapFly(fly, from, to, cartBtn);
     fly.className = 'fly-img';
     fly.style.left = from.left + 'px';
     fly.style.top = from.top + 'px';
@@ -1349,6 +1386,34 @@
       `translate(${to.left + to.width / 2 - from.left - 30}px, ${to.top + to.height / 2 - from.top - 38}px)`);
     document.body.appendChild(fly);
     fly.addEventListener('animationend', () => fly.remove());
+    return false;
+  }
+
+  // GSAP path: the photo lifts, then arcs down into the bag (x eases in while
+  // y overshoots up first via back.in), shrinking as it goes. On impact the bag
+  // bounces and the count ticks — the "bounce add-to-cart" from the build plan.
+  function gsapFly(fly, from, to, cartBtn) {
+    fly.className = 'fly-img gsap';
+    document.body.appendChild(fly);
+    const dx = to.left + to.width / 2 - 30;
+    const dy = to.top + to.height / 2 - 38;
+    gsap.set(fly, { x: from.left, y: from.top, autoAlpha: 0.95, scale: 1, rotation: 0 });
+    gsap.timeline({ onComplete: () => fly.remove() })
+      .to(fly, { scale: 1.08, duration: 0.12, ease: 'power2.out' })
+      .to(fly, { x: dx, duration: 0.62, ease: 'power2.in' }, '>')
+      .to(fly, { y: dy, duration: 0.62, ease: 'back.in(2.2)' }, '<')
+      .to(fly, { scale: 0.18, rotation: -8, duration: 0.62, ease: 'power3.in' }, '<')
+      .to(fly, { autoAlpha: 0, duration: 0.12 }, '-=0.1')
+      .add(() => landInBag(cartBtn), '-=0.08');
+    return true;
+  }
+
+  function landInBag(cartBtn) {
+    bumpCart();
+    cartBtn.classList.add('landing');
+    gsap.timeline({ onComplete: () => cartBtn.classList.remove('landing') })
+      .to(cartBtn, { scale: 1.12, y: 2, duration: 0.1, ease: 'power2.out', overwrite: true })
+      .to(cartBtn, { scale: 1, y: 0, duration: 0.55, ease: 'elastic.out(1, 0.4)', clearProps: 'transform' });
   }
 
   // ── Product detail (PDP) ───────────────────────────────────────────────────
@@ -1598,8 +1663,8 @@
     saveCart();
     updateCartUI();
     showToast(`${p.name} added to bag`);
-    flyFromEl(document.querySelector('#pdp-main img'), p);
-    bumpCart();
+    const pdpCoversHeader = window.matchMedia('(max-width: 480px)').matches;
+    if (pdpCoversHeader || !flyFromEl(document.querySelector('#pdp-main img'), p)) bumpCart();
     const addBtn = document.getElementById('pdp-add');
     addBtn.textContent = '✓ Added to bag';
     addBtn.className = 'pdp-add added';
@@ -1690,7 +1755,7 @@
         ? pic(item.images[0], `alt="${escHtml(item.product_name)}"`)
         : '';
       return `
-        <div class="cart-item">
+        <div class="cart-item" style="--i:${idx}">
           <div class="cart-item-img">${imgHtml}</div>
           <div class="cart-item-info">
             <div class="cart-item-name">${escHtml(item.product_name)}</div>
@@ -1736,12 +1801,14 @@
   }
 
   function changeQty(idx, delta) {
+    document.getElementById('cart-drawer').classList.remove('items-in');
     cart[idx].quantity = Math.max(1, cart[idx].quantity + delta);
     saveCart();
     updateCartUI();
   }
 
   function removeItem(idx) {
+    document.getElementById('cart-drawer').classList.remove('items-in');
     cart.splice(idx, 1);
     saveCart();
     updateCartUI();
@@ -1749,8 +1816,21 @@
 
   function openCart() {
     document.getElementById('cart-overlay').classList.add('open');
-    document.getElementById('cart-drawer').classList.add('open');
+    const drawer = document.getElementById('cart-drawer');
+    drawer.classList.add('open');
     renderCartItems();
+    // Stagger items in on open only — not on every qty change re-render
+    drawer.classList.add('items-in');
+    clearTimeout(openCart._t);
+    openCart._t = setTimeout(() => drawer.classList.remove('items-in'), 900);
+  }
+
+  // CTA loading state: spinner + live label; restores the original label after.
+  function setBtnLoading(btn, loading, label) {
+    btn.disabled = loading;
+    btn.classList.toggle('btn-loading', loading);
+    btn.setAttribute('aria-busy', loading ? 'true' : 'false');
+    if (label) btn.textContent = label;
   }
 
   function closeCart() {
@@ -1762,11 +1842,13 @@
 
   async function openCheckout() {
     if (!cart.length) return;
-    closeCart();
 
     const checkoutBtn = document.getElementById('checkout-btn');
-    checkoutBtn.disabled = true;
-    checkoutBtn.textContent = 'Validating cart…';
+    setBtnLoading(checkoutBtn, true, 'Validating cart…');
+    // The bag stays open while validating; if it's edited meanwhile, re-validate
+    // so the summary never pairs new rows with old server totals.
+    const cartKey = () => cart.map(i => `${i.variant_id}:${i.quantity}`).join(',');
+    const snapshot = cartKey();
 
     try {
       const res = await fetch(`${API}/cart/validate`, {
@@ -1776,16 +1858,23 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Cart validation failed');
+      if (!document.getElementById('cart-drawer').classList.contains('open')) {
+        setBtnLoading(checkoutBtn, false, 'Proceed to Checkout');
+        return;
+      }
+      if (cartKey() !== snapshot) {
+        setBtnLoading(checkoutBtn, false, 'Proceed to Checkout');
+        return openCheckout();
+      }
       serverTotals = data;
     } catch (e) {
       showToast(e.message);
-      checkoutBtn.disabled = false;
-      checkoutBtn.textContent = 'Proceed to Checkout';
+      setBtnLoading(checkoutBtn, false, 'Proceed to Checkout');
       return;
     }
 
-    checkoutBtn.disabled = false;
-    checkoutBtn.textContent = 'Proceed to Checkout';
+    setBtnLoading(checkoutBtn, false, 'Proceed to Checkout');
+    closeCart(); // only after validation, so the button's loading state is seen
 
     const { subtotal, shipping, total } = serverTotals;
     document.getElementById('checkout-summary').innerHTML = `
@@ -1824,8 +1913,7 @@
       return;
     }
 
-    payBtn.disabled = true;
-    payBtn.textContent = 'Creating order…';
+    setBtnLoading(payBtn, true, 'Creating order…');
 
     try {
       const res = await fetch(`${API}/checkout/init`, {
@@ -1846,12 +1934,12 @@
       cart = [];
       updateCartUI();
 
+      payBtn.textContent = 'Redirecting to Paystack…';
       window.location.href = data.authorization_url || data.payment_url;
     } catch (e) {
       errEl.textContent = e.message;
       errEl.classList.add('visible');
-      payBtn.disabled = false;
-      payBtn.textContent = 'Pay with Paystack';
+      setBtnLoading(payBtn, false, 'Pay with Paystack');
     }
   }
 
@@ -1881,6 +1969,14 @@
   }
 
   // ── Boot ──────────────────────────────────────────────────────────────────
+
+  // Returning from Paystack via Back can restore this page from the bfcache with
+  // the pay button still spinning — reset it.
+  window.addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    setBtnLoading(document.getElementById('pay-btn'), false, 'Pay with Paystack');
+    closeCheckout();
+  });
 
   // Back/forward button drives the brand/hair view and product overlay
   window.addEventListener('popstate', () => { if (catalog.length) routeFromUrl(); });
