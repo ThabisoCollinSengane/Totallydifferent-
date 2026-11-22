@@ -7,7 +7,7 @@ Author: spec-writer · Approved by: <owner>
 - In the owner's words:
 - Mechanical rule (one sentence):
 - Channel: online / face to face / salon or boutique / TikTok creator
-- Brand(s): Novacaine men / Novacaine women / Countryman / Antisocial / Kookies / hair
+- Brand(s): Novacaine men / Novacaine women / Countryman / Antisocial / Kookies / Timeless / hair
 - Already tested? (earlier tests and what they found)
 
 ## 2. Attribution — how each sale is tied to this channel

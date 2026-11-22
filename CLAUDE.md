@@ -129,7 +129,7 @@ Thabiso Collins Engane — thacollin2@gmail.com
 
 ## Go-to-market (owner's plan)
 - Model: a LookFantastic-style store. Start with the in-house brands (Novacaine men and women,
-  Countryman, Antisocial, Kookies, plus the hair line); add other brands later.
+  Countryman, Antisocial, Kookies, Timeless, plus the hair line); add other brands later.
 - Channels: online store, face-to-face sales (Yoco card machine), salons and boutiques, TikTok creators.
 - Area: KZN (Durban) first, then nationwide.
 - Known gaps before channel tests can be measured:
@@ -137,6 +137,9 @@ Thabiso Collins Engane — thacollin2@gmail.com
   2. Yoco sales do not reach the `orders` table, so stock does not drop. Hard Rule 2 means the owner
      must decide how to handle this before anything is built.
 - Kookies is cannabis-themed: check TikTok's current guidelines before any Kookies creator or post.
+- Timeless (clothing) is the newest brand: positioning, products and its `brands` row (logo, colours,
+  tagline) are still to be set. "Timeless" is a common word, so search the CIPC trade mark register
+  (class 25, clothing) before investing in the name.
 
 ## Design & motion skills
 | Skill | Where | Use it for |

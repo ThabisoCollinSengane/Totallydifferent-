@@ -15,7 +15,7 @@ For each plan:
    before-and-after, wig try-ons, slogan-tee reactions, outfit builds per brand, market-day and
    behind-the-scenes clips, packing orders.
 3. Match each brand's feel (colours and tone are in COLOUR_SCHEME.md): Novacaine, Countryman,
-   Antisocial, Kookies and hair should not look like one generic account.
+   Antisocial, Kookies, Timeless and hair should not look like one generic account.
 4. Note what to film once and reuse (one shoot day -> many clips) so the plan fits a small team.
 
 Rules:
