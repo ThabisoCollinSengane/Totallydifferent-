@@ -14,7 +14,7 @@ Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 1. ✅ Schema + seed data (`products` ×5, `product_variants` ×12, `orders`)
 2. ✅ API contract (10 endpoints defined)
 3. ✅ Backend logic — all 5 engines + Communication Engine
-4. ✅ Tests + validation — 65 tests, 0 failures (`npm test`)
+4. ✅ Tests + validation — 66 tests, 0 failures (`npm test`)
 5. ⬜ UI system (card-based, checkout flow)
 6. ✅ Animations (bounce add-to-cart, slide transitions, CTA loading state) — see "Design & motion skills"
 7. ⬜ Final polish
@@ -78,7 +78,7 @@ tests/assistant.test.js — TotaAI: validation, price guard, no-PII order lookup
 
 ## Running Tests
 ```bash
-npm test   # runs all 65 tests, must pass before any push to main
+npm test   # runs all 66 tests, must pass before any push to main
 ```
 
 ## Environment Variables
