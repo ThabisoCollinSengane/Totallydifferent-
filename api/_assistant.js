@@ -150,7 +150,10 @@ RULES:
 // Rand amounts in a reply that are not real catalogue/order/delivery prices.
 function unknownPrices(text, allowed) {
   const bad = [];
-  const re = /R\s?(\d{1,3}(?:[ ,]\d{3})+|\d+)(?:\.(\d{1,2}))?(?![\d])/g;
+  // Left boundary so order refs (TD-...-AR7) don't count; thousands groups must end the
+  // number so "R450 250ml" is R450, not R450250.
+  const re = /(?<![A-Za-z0-9-])R\s?(\d{1,3}(?:[ ,]\d{3}(?![\d\w]))+|\d+)(?:\.(\d{1,2}))?(?![\d])/g;
+  text = String(text).replace(new RegExp(ORDER_REF.source, 'gi'), ' ');
   let m;
   while ((m = re.exec(text))) {
     const n = Number(m[1].replace(/[ ,]/g, '') + (m[2] ? '.' + m[2] : ''));
@@ -191,15 +194,19 @@ async function candidateModels(key) {
   return list;
 }
 
-async function groqChat(messages, systemPrompt, key) {
-  const models = (await candidateModels(key)).slice(0, 4);
+// One deadline shared by every model try (and the price retry), so the function stops
+// before the widget gives up at 25s.
+async function groqChat(messages, systemPrompt, key, deadline = Date.now() + 20000) {
+  const models = (await candidateModels(key)).slice(0, 3);
   let lastErr = null;
   for (const model of models) {
     const body = { model, messages: [{ role: 'system', content: systemPrompt }, ...messages], temperature: 0.3, max_tokens: 400 };
     if (/gpt-oss/.test(model)) { body.reasoning_effort = 'low'; body.max_tokens = 900; }
     if (/qwen3/.test(model)) { body.reasoning_format = 'hidden'; body.max_tokens = 900; }
     try {
-      const r = await groqFetch('/chat/completions', key, body);
+      const left = deadline - Date.now();
+      if (left < 1500) break;
+      const r = await groqFetch('/chat/completions', key, body, Math.min(12000, left));
       if (!r.ok) { lastErr = new Error(`groq ${model} ${r.status}`); continue; }
       const d = await r.json();
       const text = d.choices?.[0]?.message?.content?.trim();
@@ -232,10 +239,11 @@ async function handleAssistant(req) {
   const allowed = new Set([...catalog.prices, 750, 80, ...(order && order.found ? [order.total] : [])]);
 
   try {
-    let reply = await groqChat(messages, system, key);
+    const deadline = Date.now() + 20000;
+    let reply = await groqChat(messages, system, key, deadline);
     if (unknownPrices(reply, allowed).length) {
       const retry = system + '\n\nYour last draft quoted a price that is not in the catalogue. Use only catalogue prices, or say to check the product page.';
-      reply = await groqChat(messages, retry, key);
+      try { reply = await groqChat(messages, retry, key, deadline); } catch { reply = SAFE_PRICE_REPLY; }
       if (unknownPrices(reply, allowed).length) reply = SAFE_PRICE_REPLY;
     }
     return { status: 200, body: { reply } };

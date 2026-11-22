@@ -96,6 +96,10 @@ describe('unknownPrices', () => {
   test('allows catalogue, delivery and threshold prices in any format', () => {
     assert.deepEqual(A.unknownPrices('The hoodie is R650, the wig R1 450 or R1,450.00. Free over R750, else R80.', allowed), []);
   });
+  test('order refs and volumes are not read as prices', () => {
+    assert.deepEqual(A.unknownPrices('Your order TD-1732000000000-AR7 has shipped.', allowed), []);
+    assert.deepEqual(A.unknownPrices('Hair oil R650 250ml', allowed), []);
+  });
   test('flags invented prices', () => {
     assert.deepEqual(A.unknownPrices('Only R499 today!', allowed), [499]);
   });
