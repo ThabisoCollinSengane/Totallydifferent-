@@ -72,7 +72,7 @@ vercel.json     — API rewrite /api/(.*) → /api/index.js ONLY
 tests/unit.test.js  — pure logic: calcShipping, HMAC, order ref format
 tests/api.test.js   — route handler tests (Supabase mocked, no real network)
 api/_assistant.js   — TotaAI (Groq). `_` prefix stops Vercel deploying it as its own function
-assets/assistant/   — TotaAI meerkat frames + tota-widget.v2.js (bump the version to change it)
+assets/assistant/   — TotaAI meerkat frames + tota-widget.v3.js (bump the version to change it)
 tests/assistant.test.js — TotaAI: validation, price guard, no-PII order lookup, rate limit
 ```
 

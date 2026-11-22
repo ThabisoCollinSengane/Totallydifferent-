@@ -2,7 +2,7 @@
  * A draggable 2D meerkat on every page; tap it to chat. Talks to POST /api/assistant
  * and falls back to built-in answers when the AI is off or unreachable.
  * Self-contained: injects its own CSS, needs no other script. Versioned filename
- * because /assets is cached as immutable — ship changes as tota-widget.v3.js. */
+ * because /assets is cached as immutable — ship changes as tota-widget.v4.js. */
 (function () {
   'use strict';
   if (window.__tota) return;
@@ -152,7 +152,7 @@
   }
   function defaultPos() { return { fx: 1, fy: 1 }; } // bottom-right; place() clamps it in
   var cur = pos && typeof pos.fx === 'number' ? pos : defaultPos();
-  window.addEventListener('resize', function () { place(cur.fx, cur.fy); placeBubble(); });
+  window.addEventListener('resize', function () { place(cur.fx, cur.fy); bubble.hidden = true; });
 
   var drag = null;
   pet.addEventListener('pointerdown', function (e) {
@@ -208,9 +208,29 @@
     var top = r.top - bh - 8;
     bubble.style.top = (top < 68 ? r.bottom + 8 : top) + 'px';
   }
+  // True when the box would cover a visible button, link or field on the page.
+  function coversControl(b) {
+    var els = document.querySelectorAll('a[href],button,input,select,textarea,[role="button"]');
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i];
+      if (e === pet || panel.contains(e)) continue;
+      var r = e.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      if (r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top) return true;
+    }
+    return false;
+  }
   function say(text, ms) {
     if (open || pet.hidden) return;
     bubble.textContent = text; bubble.hidden = false; placeBubble();
+    // Never cover something the shopper might tap: try beside the meerkat, else stay quiet.
+    if (coversControl(bubble.getBoundingClientRect())) {
+      var r = pet.getBoundingClientRect(), bw = bubble.offsetWidth, bh = bubble.offsetHeight;
+      var left = r.left - bw - 8 >= 8 ? r.left - bw - 8 : r.right + 8;
+      bubble.style.left = left + 'px';
+      bubble.style.top = clamp(r.top + r.height / 2 - bh / 2, 68, window.innerHeight - bh - 8) + 'px';
+      if (left + bw > window.innerWidth - 8 || coversControl(bubble.getBoundingClientRect())) { bubble.hidden = true; return; }
+    }
     setTimeout(function () { bubble.hidden = true; }, ms || 5000);
   }
 
