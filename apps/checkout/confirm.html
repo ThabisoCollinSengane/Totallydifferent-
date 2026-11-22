@@ -65,7 +65,34 @@
     padding: 24px; font-size: 13px;
   }
 </style>
-<script src="/assets/assistant/tota-widget.v3.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Unbounded:wght@700;800&family=Manrope:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+<style>
+  /* Night theme, matching the store. */
+  :root { color-scheme: dark; --black: #f3efff; --white: #07060d; --gold: #ff3fd8; --grey: #a59fbf; --grey-light: #1b1628; --grey-border: #2a2340;
+    --green: #3ff0ff; --red: #ff5a7a; --font: "Unbounded", "Arial Black", system-ui, sans-serif; --font-sans: "Manrope", system-ui, -apple-system, sans-serif; }
+  body { background: #07060d; color: #f3efff; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(40% 40% at 15% 20%, rgba(255,63,216,.22), transparent 70%), radial-gradient(40% 40% at 85% 70%, rgba(63,240,255,.16), transparent 70%); }
+  header { background: rgba(7,6,13,.86); border-bottom-color: #2a2340; }
+  .logo { font-family: "Monoton", "Unbounded", system-ui, sans-serif; color: #ffe8fb; text-shadow: 0 0 6px #ff3fd8, 0 0 18px rgba(255,63,216,.6); }
+  .logo span { color: #e6fdff; text-shadow: 0 0 6px #3ff0ff, 0 0 18px rgba(63,240,255,.6); }
+  .card { background: #120f1d; border-color: #2a2340; border-radius: 18px; box-shadow: 0 0 40px rgba(255,63,216,.16), 0 24px 60px rgba(0,0,0,.5);
+    animation: cIn .5s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes cIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+  .card h1 { font-weight: 800; }
+  .order-ref { color: #3ff0ff; border: 1px solid #2a2340; border-radius: 12px; text-shadow: 0 0 10px rgba(63,240,255,.4); }
+  .order-details { border-radius: 12px; }
+  .status-paid { background: rgba(63,240,255,.12); color: #3ff0ff; }
+  .status-pending { background: rgba(255,209,102,.12); color: #ffd166; }
+  .order-item-price { color: #ff3fd8; }
+  .shop-btn { border-radius: 999px; background: #ff3fd8; color: #14001c; font-family: var(--font); font-weight: 800; box-shadow: 0 0 24px rgba(255,63,216,.55); }
+  .shop-btn:hover { background: #ff63e0; }
+  footer { background: #07060d; border-top: 1px solid #2a2340; color: #a59fbf; }
+  @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
+</style>
+<script src="/assets/assistant/tota-widget.v4.js" defer></script>
 </head>
 <body>
 
