@@ -888,6 +888,7 @@
   .products-section.themed .add-btn { background: transparent; color: var(--theme-accent); box-shadow: inset 0 0 0 2px var(--theme-accent); }
   .products-section.themed .add-btn:hover:not(:disabled) { background: var(--theme-accent); color: #07060d; }
   .products-section.themed .add-btn.added { background: var(--n-cyan); color: #00151a; }
+  .products-section.themed .add-btn:disabled { background: #1b1628; color: var(--cream-muted); box-shadow: none; }
   .brand-card.logo-card { border-radius: 16px; }
 
   /* bag + checkout */
@@ -1181,19 +1182,19 @@
       <div class="order-summary" id="checkout-summary"></div>
       <div class="error-msg" id="checkout-error"></div>
       <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="buyer-name" placeholder="Thabiso Engane" autocomplete="name">
+        <label for="buyer-name">Full Name</label>
+        <input type="text" id="buyer-name" placeholder="Your full name" autocomplete="name">
       </div>
       <div class="form-group">
-        <label>Email Address</label>
+        <label for="buyer-email">Email Address</label>
         <input type="email" id="buyer-email" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="form-group">
-        <label>Phone Number</label>
+        <label for="buyer-phone">Phone Number</label>
         <input type="tel" id="buyer-phone" placeholder="+27 83 000 0000" autocomplete="tel">
       </div>
       <div class="form-group">
-        <label>Delivery Address</label>
+        <label for="buyer-address">Delivery Address</label>
         <textarea id="buyer-address" placeholder="123 Main Street, Durban, 4001"></textarea>
       </div>
       <!-- Distrust of entering card details is a top-5 checkout drop-off; say
@@ -1291,13 +1292,14 @@
     return '#' + to(f(0)) + to(f(8)) + to(f(4));
   }
   function autoPalette(bg) {
-    const { h, s, l } = hexToHsl(bg);
-    // Same hue, lifted but deliberately capped: a muted accent reads premium,
-    // a saturated one reads candy. Keeps every theme in the smoked-matte family.
-    const accent = hslToHex(h, Math.min(s + 24, 42), Math.min(l + 32, 54));
-    const text = l < 50 ? hslToHex(h, Math.min(Math.max(s, 14), 26), 90)          // dark bg → light text
-                        : hslToHex(h, Math.max(s, 18), 12);                        // light bg → dark text
-    return [bg, accent, text];
+    // Night theme: keep each brand's hue, but as neon on near-black. Background is
+    // pulled dark, accent is bright and saturated, text is a light tint of the hue.
+    const { h, s } = hexToHsl(/^#[0-9a-f]{6}$/i.test(bg || '') ? bg : '#120d1f');
+    if (s < 8) return ['#0e0b16', '#ff3fd8', '#f3efff'];   // grey/black brands get the house pink
+    const night = hslToHex(h, Math.min(s, 45), 8);
+    const accent = hslToHex(h, 90, 64);
+    const text = hslToHex(h, 30, 93);
+    return [night, accent, text];
   }
   // Read a CSS token (e.g. '--primary-bg') from :root
   const token = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -1485,8 +1487,9 @@
     const story = b.tagline || (b.story || '').split('.')[0];
     const logoSlide = b.logo_image ? pic(b.logo_image, `class="bl-slide bl-slide--logo is-active" alt="${escHtml(label)}"`) : '';
     const photoSlides = brandSlides(b).map(src => pic(src, 'class="bl-slide bl-slide--photo" alt="" loading="lazy"')).join('');
+    const pal = autoPalette(b.theme_bg);
     const countTxt = count ? `${count} ${count === 1 ? 'piece' : 'pieces'} · Shop ›` : 'Dropping soon';
-    return `<div class="brand-card logo-card ${b.glow ? 'glow' : ''}" style="--theme-bg:${escHtml(b.theme_bg || '#0a0a0a')};--theme-accent:${escHtml(b.theme_accent || '#c8a96e')};--theme-text:${escHtml(b.theme_text || '#fafafa')};animation-delay:${delay}s" onclick="openBrand('${b.id}')">
+    return `<div class="brand-card logo-card ${b.glow ? 'glow' : ''}" style="--theme-bg:${pal[0]};--theme-accent:${pal[1]};--theme-text:${pal[2]};animation-delay:${delay}s" onclick="openBrand('${b.id}')">
       <div class="bl-stage" id="stage-${b.id}">${logoSlide}${photoSlides}</div>
       <div class="bl-top">
         <div class="b-name">${escHtml(label)}</div>
