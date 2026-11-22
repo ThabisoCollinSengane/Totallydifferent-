@@ -2,7 +2,7 @@
  * A draggable 2D meerkat on every page; tap it to chat. Talks to POST /api/assistant
  * and falls back to built-in answers when the AI is off or unreachable.
  * Self-contained: injects its own CSS, needs no other script. Versioned filename
- * because /assets is cached as immutable — ship changes as tota-widget.v4.js. */
+ * because /assets is cached as immutable — ship changes as tota-widget.v5.js. */
 (function () {
   'use strict';
   if (window.__tota) return;
@@ -22,7 +22,7 @@
   // that don't define the variables (the light confirm page).
   var css = [
     '.tota-pet{position:fixed;z-index:180;width:64px;height:78px;padding:0;border:0;background:none;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;filter:drop-shadow(0 5px 10px rgba(0,0,0,.4));}',
-    '.tota-pet:focus-visible{outline:2px solid #d4b87e;outline-offset:4px;border-radius:12px;}',
+    '.tota-pet:focus-visible{outline:2px solid #ff3fd8;outline-offset:4px;border-radius:12px;}',
     '.tota-pet.dragging{cursor:grabbing;}',
     '.tota-pet img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none;}',
     '.tota-pet .tota-body{display:block;width:100%;height:100%;transform-origin:50% 100%;}',
@@ -32,33 +32,33 @@
     'body.tota-on{padding-bottom:calc(92px + env(safe-area-inset-bottom));}',
     '@keyframes tota-bob{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-4px) scaleY(1.015)}}',
     '@keyframes tota-hop{0%{transform:translateY(0) scale(1)}40%{transform:translateY(-16px) scale(1.04,.97)}100%{transform:translateY(0) scale(1)}}',
-    '.tota-bubble{position:fixed;z-index:181;max-width:190px;padding:9px 12px;border-radius:12px;background:#2b1d24;color:#f6ebe3;border:1px solid rgba(212,184,126,.6);box-shadow:0 8px 22px rgba(0,0,0,.4);font:500 13px/1.35 system-ui,-apple-system,sans-serif;pointer-events:none;}',
-    '.tota-panel{position:fixed;z-index:190;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));width:min(370px,calc(100vw - 24px));height:min(540px,calc(100dvh - 84px));display:flex;flex-direction:column;background:#2b1d24;color:#f6ebe3;border:1px solid rgba(212,184,126,.35);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.55);font:14px/1.45 system-ui,-apple-system,sans-serif;overflow:hidden;}',
+    '.tota-bubble{position:fixed;z-index:181;max-width:190px;padding:9px 12px;border-radius:12px;background:#120f1d;color:#f3efff;border:1px solid rgba(255,63,216,.6);box-shadow:0 8px 22px rgba(0,0,0,.4);font:500 13px/1.35 system-ui,-apple-system,sans-serif;pointer-events:none;}',
+    '.tota-panel{position:fixed;z-index:190;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));width:min(370px,calc(100vw - 24px));height:min(540px,calc(100dvh - 84px));display:flex;flex-direction:column;background:#120f1d;color:#f3efff;border:1px solid rgba(255,63,216,.35);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.55);font:14px/1.45 system-ui,-apple-system,sans-serif;overflow:hidden;}',
     '.tota-panel:not(.still){animation:tota-in .26s cubic-bezier(.16,1,.3,1);}',
     '@keyframes tota-in{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}',
-    '.tota-head{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;background:#3b2731;border-bottom:1px solid rgba(212,184,126,.25);}',
+    '.tota-head{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;background:#1b1628;border-bottom:1px solid rgba(255,63,216,.25);}',
     '.tota-head .tota-av{width:40px;height:49px;flex:none;object-fit:contain;}',
     '.tota-head .tota-logo{height:28px;width:auto;display:block;}',
-    '.tota-head .tota-sub{font-size:11.5px;color:#cdbcb4;margin-top:1px;}',
-    '.tota-hide{margin-left:auto;min-height:44px;padding:0 10px;border:0;background:transparent;color:#cdbcb4;font:500 12px system-ui,-apple-system,sans-serif;text-decoration:underline;white-space:nowrap;cursor:pointer;}',
-    '.tota-x{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid rgba(246,235,227,.2);background:transparent;color:#f6ebe3;font-size:22px;line-height:1;cursor:pointer;}',
-    '.tota-x:hover{border-color:#d4b87e;}',
-    '.tota-panel :focus-visible{outline:2px solid #d4b87e;outline-offset:2px;}',
+    '.tota-head .tota-sub{font-size:11.5px;color:#a59fbf;margin-top:1px;}',
+    '.tota-hide{margin-left:auto;min-height:44px;padding:0 10px;border:0;background:transparent;color:#a59fbf;font:500 12px system-ui,-apple-system,sans-serif;text-decoration:underline;white-space:nowrap;cursor:pointer;}',
+    '.tota-x{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid rgba(243,239,255,.2);background:transparent;color:#f3efff;font-size:22px;line-height:1;cursor:pointer;}',
+    '.tota-x:hover{border-color:#ff3fd8;}',
+    '.tota-panel :focus-visible{outline:2px solid #ff3fd8;outline-offset:2px;}',
     '.tota-log{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain;}',
     '.tota-msg{max-width:85%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word;}',
-    '.tota-msg.bot{align-self:flex-start;background:#3b2731;border-bottom-left-radius:4px;}',
-    '.tota-msg.me{align-self:flex-end;background:#d4b87e;color:#231419;font-weight:500;border-bottom-right-radius:4px;}',
-    '.tota-msg.wait{color:#cdbcb4;font-style:italic;}',
+    '.tota-msg.bot{align-self:flex-start;background:#1b1628;border-bottom-left-radius:4px;}',
+    '.tota-msg.me{align-self:flex-end;background:#ff3fd8;color:#14001c;font-weight:500;border-bottom-right-radius:4px;}',
+    '.tota-msg.wait{color:#a59fbf;font-style:italic;}',
     '.tota-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px;}',
-    '.tota-chip{min-height:44px;padding:6px 14px;border-radius:999px;border:1px solid rgba(212,184,126,.55);background:transparent;color:#f6ebe3;font:500 13px system-ui,-apple-system,sans-serif;cursor:pointer;}',
-    '.tota-chip:hover{background:rgba(212,184,126,.12);}',
-    '.tota-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(246,235,227,.08);}',
-    '.tota-form input{flex:1;min-width:0;height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(246,235,227,.2);background:#3b2731;color:#f6ebe3;font-size:16px;}',
-    '.tota-form input::placeholder{color:#b3a29b;}',
-    '.tota-form input:focus{border-color:#d4b87e;}',
-    '.tota-form button{height:44px;padding:0 18px;border-radius:999px;border:0;background:#d4b87e;color:#231419;font-weight:700;cursor:pointer;}',
+    '.tota-chip{min-height:44px;padding:6px 14px;border-radius:999px;border:1px solid rgba(255,63,216,.55);background:transparent;color:#f3efff;font:500 13px system-ui,-apple-system,sans-serif;cursor:pointer;}',
+    '.tota-chip:hover{background:rgba(255,63,216,.12);}',
+    '.tota-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(243,239,255,.08);}',
+    '.tota-form input{flex:1;min-width:0;height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(243,239,255,.2);background:#1b1628;color:#f3efff;font-size:16px;}',
+    '.tota-form input::placeholder{color:#a59fbf;}',
+    '.tota-form input:focus{border-color:#ff3fd8;}',
+    '.tota-form button{height:44px;padding:0 18px;border-radius:999px;border:0;background:#ff3fd8;color:#14001c;font-weight:700;cursor:pointer;}',
     '.tota-form button[disabled]{opacity:.5;cursor:default;}',
-    '.tota-note{padding:0 12px 8px;font-size:11px;color:#b3a29b;}',
+    '.tota-note{padding:0 12px 8px;font-size:11px;color:#a59fbf;}',
     '@media (max-width:480px){.tota-panel{right:0;left:0;bottom:0;width:100%;height:min(78dvh,600px);border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom);}}',
     '@media (prefers-reduced-motion:reduce){.tota-pet .tota-body,.tota-panel{animation:none!important;}}',
   ].join('\n');

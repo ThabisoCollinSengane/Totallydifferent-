@@ -38,7 +38,7 @@
 <!-- GSAP (self-hosted, optional): powers the add-to-cart arc. If it fails to load,
      the CSS animations below take over — nothing in the shop depends on it. -->
 <script src="/assets/vendor/gsap-3.12.5.min.js" defer></script>
-<script src="/assets/assistant/tota-widget.v3.js" defer></script>
+<script src="/assets/assistant/tota-widget.v4.js" defer></script>
 <script src="/assets/night/night-hero.v1.js" defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -693,7 +693,7 @@
      if Google Fonts fails, the sign falls back to a heavy system font. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Unbounded:wght@700;800&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Unbounded:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
 <style>
   .nh {
     --n-night: #07060d; --n-panel: #120f1d; --n-line: #2a2340; --n-ink: #f3efff; --n-muted: #a59fbf;
@@ -817,6 +817,132 @@
     .nh-track, .nh-bob, .nh-char.hop .nh-bob, .nh-sign.flicker, .nh-slide.on .fg { animation: none; }
     .nh-char, .nh-flip, .nh-slide { transition: none; }
     .nh-pause { display: none; }
+  }
+</style>
+<style>
+  /* ── Night theme: the whole store in the After Dark look ─────────────────────
+     Loaded last, so it re-skins every section through the shared tokens plus a
+     few targeted rules. Old maroon/gold tokens are remapped to the neon palette. */
+  :root {
+    color-scheme: dark;
+    --black: #0b0714;
+    --maroon: #2a1838; --maroon-mid: #3a2150; --maroon-deep: #120f1d; --matte-black: #07060d;
+    --white: #f3efff;
+    --gold: #ff3fd8;            /* primary accent is now neon pink */
+    --gold-light: #ff7ae6;
+    --grey: #a59fbf;
+    --studio-base: #07060d; --studio-surface: #120f1d; --studio-raised: #1b1628; --studio-border: #2a2340;
+    --cream: #f3efff; --cream-muted: #a59fbf;
+    --red: #ff5a7a; --sale: #ff3f6e; --sale-ink: #fff;
+    --radius: 12px;
+    --font: "Unbounded", "Arial Black", system-ui, sans-serif;
+    --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --primary-bg: #120d1f; --clothing-bg: #0b1a22; --hair-bg: #1d0d1c; --deals-bg: #210c16;
+    --n-pink: #ff3fd8; --n-cyan: #3ff0ff; --n-amber: #ffd166;
+    --shadow-md: 0 12px 34px rgba(0,0,0,0.55);
+  }
+  body { background: #07060d; }
+  ::selection { background: rgba(255,63,216,.35); }
+
+  /* header */
+  header { background: rgba(7,6,13,.86); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom-color: #2a2340; }
+  .logo { font-family: "Monoton", "Unbounded", system-ui, sans-serif; font-size: 22px; letter-spacing: .04em; color: #ffe8fb;
+    text-shadow: 0 0 6px var(--n-pink), 0 0 18px rgba(255,63,216,.6); }
+  .logo span { color: #e6fdff; text-shadow: 0 0 6px var(--n-cyan), 0 0 18px rgba(63,240,255,.6); }
+  @media (max-width: 420px) { .logo { font-size: 17px; } }
+  .nav-link { color: var(--cream-muted); }
+  .nav-link:hover { color: var(--cream); }
+  .cart-btn { border-radius: 999px; border-color: #2a2340; font-weight: 600; }
+  .cart-btn:hover { border-color: var(--n-cyan); box-shadow: 0 0 16px rgba(63,240,255,.3); }
+  .cart-count { background: var(--n-pink); color: #14001c; font-weight: 800; box-shadow: 0 0 12px var(--n-pink); }
+
+  /* trust bar + filters */
+  .trust-bar { background: #0c0a16; border-color: #2a2340; color: var(--cream-muted); }
+  .trust-bar svg { color: var(--n-cyan); }
+  .filters { background: #07060d; border-bottom-color: #2a2340; }
+  .filter-label { color: var(--n-cyan); letter-spacing: .2em; font-weight: 700; }
+  .filter-btn { border-radius: 999px; border-color: #2a2340; color: var(--cream-muted); background: transparent; font-weight: 600; }
+  .filter-btn:hover { border-color: var(--n-cyan); color: var(--cream); }
+  .filter-btn.active { background: var(--n-pink); border-color: var(--n-pink); color: #14001c; box-shadow: 0 0 18px rgba(255,63,216,.55); }
+  .filter-btn.filter-deals { border-color: rgba(255,63,110,.6); color: #ff8fab; }
+  .search-input { border-radius: 999px; background: #120f1d; border-color: #2a2340; color: var(--cream); }
+  .search-input:focus { border-color: var(--n-cyan); box-shadow: 0 0 0 3px rgba(63,240,255,.15); outline: none; }
+
+  /* product cards */
+  .product-card { background: #120f1d; border: 1px solid #2a2340; border-radius: 16px; overflow: hidden; }
+  .product-card:hover { box-shadow: 0 0 0 1px rgba(255,63,216,.55), 0 0 30px rgba(255,63,216,.22); transform: translateY(-3px); }
+  .product-cat-badge { background: rgba(7,6,13,.78); color: var(--n-cyan); border-radius: 999px; font-weight: 700; }
+  .product-name { font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+  .product-price { color: var(--n-pink); font-weight: 800; }
+  .variant-chip { border-radius: 999px; min-height: 34px; padding: 6px 12px; border-color: #2a2340; }
+  .variant-chip:hover { border-color: var(--n-cyan); }
+  .variant-chip.selected { background: var(--n-cyan); border-color: var(--n-cyan); color: #00151a; font-weight: 700; box-shadow: 0 0 14px rgba(63,240,255,.45); }
+  .add-btn, .pdp-add { border-radius: 999px; min-height: 46px; background: transparent; color: var(--n-pink); box-shadow: inset 0 0 0 2px var(--n-pink);
+    font-family: var(--font); font-weight: 800; letter-spacing: .04em; transition: background .18s, color .18s, box-shadow .18s, transform .12s; }
+  .add-btn:hover:not(:disabled), .pdp-add:hover:not(:disabled) { background: var(--n-pink); color: #14001c; box-shadow: 0 0 22px rgba(255,63,216,.6); }
+  .add-btn:active:not(:disabled), .pdp-add:active:not(:disabled) { transform: scale(.96); }
+  .add-btn:disabled, .pdp-add:disabled { background: #1b1628; color: var(--cream-muted); box-shadow: none; }
+  .add-btn.added, .pdp-add.added { background: var(--n-cyan); color: #00151a; box-shadow: 0 0 24px rgba(63,240,255,.7); }
+  /* house tabs and brand pages: keep each theme's colour, but in neon form */
+  .products-section.themed .product-card { background: color-mix(in srgb, var(--theme-bg) 78%, #000); border-color: color-mix(in srgb, var(--theme-accent) 30%, transparent); }
+  .products-section.themed .add-btn { background: transparent; color: var(--theme-accent); box-shadow: inset 0 0 0 2px var(--theme-accent); }
+  .products-section.themed .add-btn:hover:not(:disabled) { background: var(--theme-accent); color: #07060d; }
+  .products-section.themed .add-btn.added { background: var(--n-cyan); color: #00151a; }
+  .brand-card.logo-card { border-radius: 16px; }
+
+  /* bag + checkout */
+  .cart-drawer { background: #0d0a17; border-left: 1px solid #2a2340; box-shadow: -20px 0 60px rgba(0,0,0,.6); }
+  .cart-header h2, .modal-header h2 { font-family: var(--font); font-weight: 800; letter-spacing: .01em; }
+  .cart-item-price, .order-summary-total span:last-child { color: var(--n-pink); }
+  .qty-btn { border-radius: 50%; width: 32px; height: 32px; border-color: #2a2340; }
+  .qty-btn:hover { border-color: var(--n-cyan); }
+  .ship-bar { background: #1b1628; border-radius: 999px; overflow: hidden; }
+  .ship-fill { background: linear-gradient(90deg, var(--n-pink), var(--n-cyan)); box-shadow: 0 0 12px rgba(255,63,216,.6); }
+  .ship-msg.unlocked { color: var(--n-cyan); }
+  .checkout-btn, .pay-btn { border-radius: 999px; min-height: 52px; background: var(--n-pink); color: #14001c; font-family: var(--font); font-weight: 800;
+    box-shadow: 0 0 0 1px var(--n-pink), 0 0 24px rgba(255,63,216,.55); }
+  .checkout-btn:hover, .pay-btn:hover { background: #ff63e0; box-shadow: 0 0 0 1px var(--n-pink), 0 0 36px var(--n-pink); }
+  .checkout-btn.btn-loading:disabled, .pay-btn.btn-loading:disabled { background: var(--n-pink); color: #14001c; }
+  .modal-overlay, .cart-overlay { background: rgba(3,2,8,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  .modal { background: #120f1d; border: 1px solid #2a2340; box-shadow: 0 0 40px rgba(255,63,216,.18), 0 30px 80px rgba(0,0,0,.6); }
+  .order-summary { background: #1b1628; border: 1px solid #2a2340; }
+  .form-group input, .form-group textarea { border-radius: 12px; background: #1b1628; border-color: #2a2340; }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--n-cyan); box-shadow: 0 0 0 3px rgba(63,240,255,.15), 0 6px 18px rgba(63,240,255,.12); }
+  .form-group:focus-within label { color: var(--n-cyan); }
+  .checkout-assure svg, .secure-note { color: var(--cream-muted); }
+  .checkout-assure svg { color: var(--n-cyan); }
+  .toast { background: #120f1d; color: var(--cream); border: 1px solid var(--n-cyan); border-radius: 12px; box-shadow: 0 0 24px rgba(63,240,255,.35); }
+
+  /* product page, about, FAQ, footer */
+  .pdp { background: #0d0a17; border: 1px solid #2a2340; }
+  .pdp-name { font-weight: 800; }
+  .pdp-price, .pdp .product-price { color: var(--n-pink); }
+  .about { background: #0c0a16; border-top-color: #2a2340; }
+  .about .sig { color: var(--n-pink); font-family: var(--font); }
+  .faq h2 { font-weight: 800; }
+  .faq-q { font-weight: 600; }
+  footer { background: #07060d; border-top: 1px solid #2a2340; }
+  footer a { color: var(--n-cyan); }
+  footer .footer-logo { font-family: "Monoton", "Unbounded", system-ui, sans-serif; color: #ffe8fb; text-shadow: 0 0 10px rgba(255,63,216,.6); }
+  :focus-visible { outline-color: var(--n-cyan); }
+
+  /* ── Add-to-bag burst: neon ring + "+1" from the button, bag glows ── */
+  .td-burst { position: fixed; z-index: 450; pointer-events: none; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--n-pink), 0 0 18px var(--n-pink); animation: tdBurst .6s cubic-bezier(.2,.8,.2,1) forwards; }
+  .td-burst.cyan { box-shadow: 0 0 0 2px var(--n-cyan), 0 0 18px var(--n-cyan); animation-delay: .08s; opacity: 0; }
+  @keyframes tdBurst { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(7); opacity: 0; } }
+  .td-plus { position: fixed; z-index: 451; pointer-events: none; font: 800 18px "Unbounded", system-ui, sans-serif; color: var(--n-cyan);
+    text-shadow: 0 0 10px var(--n-cyan); transform: translate(-50%, -50%); animation: tdPlus .9s ease-out forwards; }
+  @keyframes tdPlus { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -80%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -260%) scale(1); } }
+  .td-spark { position: fixed; z-index: 450; pointer-events: none; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%;
+    background: var(--c, var(--n-pink)); box-shadow: 0 0 8px var(--c, var(--n-pink)); animation: tdSpark .55s ease-out forwards; }
+  @keyframes tdSpark { to { transform: translate(var(--dx), var(--dy)) scale(.3); opacity: 0; } }
+  .cart-btn.glow { animation: tdBagGlow .9s ease-out; }
+  @keyframes tdBagGlow { 0% { box-shadow: 0 0 0 0 rgba(255,63,216,.9); border-color: var(--n-pink); } 100% { box-shadow: 0 0 0 14px rgba(255,63,216,0); } }
+  .fly-img { border-radius: 10px; box-shadow: 0 0 0 2px var(--n-pink), 0 0 24px rgba(255,63,216,.7); }
+  @media (prefers-reduced-motion: reduce) {
+    .td-burst, .td-plus, .td-spark { display: none; }
+    .cart-btn.glow { animation: none; }
   }
 </style>
 </head>
@@ -1553,9 +1679,10 @@
     saveCart();
     updateCartUI();
     showToast(`${product.name} added to bag`);
+    const addBtn = document.getElementById(`add-${productId}`);
+    addBurst(addBtn);
     if (!flyToCart(card, product)) bumpCart();
 
-    const addBtn = document.getElementById(`add-${productId}`);
     addBtn.textContent = '✓ Added';
     addBtn.className = 'add-btn added';
     setTimeout(() => {
@@ -1868,6 +1995,7 @@
     saveCart();
     updateCartUI();
     showToast(`${p.name} added to bag`);
+    addBurst(document.getElementById('pdp-add'));
     const pdpCoversHeader = window.matchMedia('(max-width: 480px)').matches;
     if (pdpCoversHeader || !flyFromEl(document.querySelector('#pdp-main img'), p)) bumpCart();
     const addBtn = document.getElementById('pdp-add');
@@ -1924,7 +2052,32 @@
     a.style.maxHeight = open ? a.scrollHeight + 'px' : '0';
   }
 
+  // Add-to-bag burst: a neon ring, sparks and a "+1" from the button that was tapped.
+  function addBurst(el) {
+    if (!el || reducedMotion()) return;
+    const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const add = (cls, style, txt) => {
+      const n = document.createElement('span'); n.className = cls; n.setAttribute('aria-hidden', 'true');
+      Object.assign(n.style, style); if (txt) n.textContent = txt;
+      document.body.appendChild(n); setTimeout(() => n.remove(), 1000);
+    };
+    add('td-burst', { left: x + 'px', top: y + 'px' });
+    add('td-burst cyan', { left: x + 'px', top: y + 'px' });
+    add('td-plus', { left: x + 'px', top: r.top + 'px' }, '+1');
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2, d = 34 + (i % 3) * 12;
+      const sp = { left: x + 'px', top: y + 'px' };
+      sp['--dx'] = Math.cos(a) * d + 'px'; sp['--dy'] = Math.sin(a) * d + 'px'; sp['--c'] = i % 2 ? '#3ff0ff' : '#ff3fd8';
+      const n = document.createElement('span'); n.className = 'td-spark'; n.setAttribute('aria-hidden', 'true');
+      n.style.left = sp.left; n.style.top = sp.top;
+      n.style.setProperty('--dx', sp['--dx']); n.style.setProperty('--dy', sp['--dy']); n.style.setProperty('--c', sp['--c']);
+      document.body.appendChild(n); setTimeout(() => n.remove(), 700);
+    }
+  }
+
   function bumpCart() {
+    const bag = document.querySelector('.cart-btn');
+    if (bag) { bag.classList.remove('glow'); void bag.offsetWidth; bag.classList.add('glow'); }
     const c = document.getElementById('cart-count');
     c.classList.remove('bump');
     void c.offsetWidth; // restart animation
