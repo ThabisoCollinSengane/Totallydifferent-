@@ -98,6 +98,10 @@ Do NOT mix env vars between the two projects.
 ## Owner
 Thabiso Collins Engane — thacollin2@gmail.com
 
+**How the owner reads results:** mostly on a phone, where `.md` file links do not open. Give feedback,
+reviews and summaries as plain text in the chat (or a shareable page/doc), never only as a link to a
+`.md` file. Files in the repo are fine as records, but the chat reply must carry the content.
+
 ## Agent Team (`.claude/agents/`)
 | Agent | Use it for | Edits code? |
 |---|---|---|

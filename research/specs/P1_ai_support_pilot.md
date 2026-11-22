@@ -16,6 +16,9 @@ Research brief: `docs/research/2026-11-22-ai-customer-support-service.md`
 - **Mechanical rule (one sentence):** for a fixed monthly fee, put an off-the-shelf AI agent on the
   client store's own helpdesk account, tune its answers every week, and have the owner personally
   handle every conversation the AI hands off, during agreed hours, for 30 days.
+- **Owner's model (confirmed 2026-11-22):** the owner is the support agent and uses AI to do the work:
+  AI-assisted human support, with the owner as the face of the service. Target clients: US, UK and
+  other international stores.
 - **What is NOT being tested:** building an AI model, a training bootcamp for agents, hiring agents,
   or a one-off chatbot setup (the brief shows setup alone sells for about $50-$400 on Fiverr and is not
   a business).
@@ -189,7 +192,8 @@ stores pay?) and stop there.
 1. Price floor for the pilot (default $399/month), and is a setup fee charged on top?
 2. Gross-margin floor per client (default R2,500 and 40%) and your own hourly rate for the second
    margin line (default R150/h).
-3. Which markets: UK/EU (needs GDPR paperwork), US (time zones), SA only, or a mix?
+3. ~~Which markets?~~ **Answered 2026-11-22: US, UK and other international.** So risk 2 (UK GDPR
+   paperwork) applies and cannot be avoided, and US coverage hours must be agreed in writing.
 4. Start date: before or after the Dec-Jan season (default: pilot starts after mid-January 2027)?
 5. Spend cap for legal, tax and the demo tool (default R5,000)?
 6. Sole proprietor or (Pty) Ltd for the pilot?
