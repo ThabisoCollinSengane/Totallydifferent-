@@ -5,7 +5,7 @@
   "main": "api/index.js",
   "engines": { "node": ">=20" },
   "scripts": {
-    "test": "node --test tests/unit.test.js tests/api.test.js tests/integration.test.js",
+    "test": "node --test tests/unit.test.js tests/api.test.js tests/integration.test.js tests/assistant.test.js",
     "test:e2e": "playwright test"
   },
   "dependencies": {
