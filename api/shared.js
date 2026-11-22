@@ -1,5 +1,6 @@
 'use strict';
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const SUPA_URL     = process.env.SUPABASE_URL;
 const SUPA_ANON    = process.env.SUPABASE_ANON_KEY;
@@ -68,6 +69,94 @@ async function verifyPaystackTx(ref, expectedZAR) {
   return { ok: true, pd };
 }
 
+// Upload a base64 image to the public product-images bucket, return its public URL
+async function uploadProductImage({ filename, contentBase64, contentType }) {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowed.includes(contentType)) throw new Error('Unsupported image type');
+  const buffer = Buffer.from(contentBase64, 'base64');
+  if (buffer.length > 5 * 1024 * 1024) throw new Error('Image exceeds 5MB limit');
+  const ext  = (filename.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb().storage.from('product-images')
+    .upload(path, buffer, { contentType, upsert: false });
+  if (error) throw new Error('Upload failed: ' + error.message);
+  const { data } = sb().storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ── Admin auth — password login → short-lived signed session token ───────────
+// The service key never reaches the browser. Sessions are HMAC-signed with a
+// server-only secret (ADMIN_SESSION_SECRET, falling back to the service key).
+function adminSecret() {
+  return process.env.ADMIN_SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY || '';
+}
+
+function timingEqual(a, b) {
+  const ba = Buffer.from(String(a)), bb = Buffer.from(String(b));
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+function checkAdminCredentials(username, password) {
+  const u = process.env.ADMIN_USERNAME || 'admin';
+  const p = process.env.ADMIN_PASSWORD || '';
+  if (!p || !username || !password) return false;
+  // evaluate both to keep timing roughly constant
+  const okUser = timingEqual(username, u);
+  const okPass = timingEqual(password, p);
+  return okUser && okPass;
+}
+
+function signAdminSession(ttlMs = 12 * 60 * 60 * 1000) {
+  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + ttlMs })).toString('base64url');
+  const sig = crypto.createHmac('sha256', adminSecret()).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifyAdminSession(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return false;
+  const [payload, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', adminSecret()).update(payload).digest('base64url');
+  if (!timingEqual(sig, expected)) return false;
+  try {
+    const { exp } = JSON.parse(Buffer.from(payload, 'base64url').toString());
+    return typeof exp === 'number' && Date.now() < exp;
+  } catch { return false; }
+}
+
+// Authorized = valid session token OR the raw service key (programmatic/back-compat)
+function isAdminAuthorized(token) {
+  if (!token) return false;
+  if (process.env.SUPABASE_SERVICE_KEY && timingEqual(token, process.env.SUPABASE_SERVICE_KEY)) return true;
+  return verifyAdminSession(token);
+}
+
+// ── Google sign-in via Supabase Auth ─────────────────────────────────────────
+// The browser does Google OAuth through Supabase and gets a Supabase access
+// token. We verify that token by asking Supabase whose it is, then gate on an
+// email allow-list before issuing our own admin session. The service key still
+// never touches the browser — Google is just another way to prove identity.
+async function verifySupabaseUser(accessToken) {
+  if (!accessToken || !SUPA_URL || !SUPA_ANON) return null;
+  try {
+    const r = await fetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${accessToken}` },
+    });
+    if (!r.ok) return null;
+    const user = await r.json();
+    return user && user.email ? user : null;
+  } catch { return null; }
+}
+
+// Comma-separated ADMIN_ALLOWED_EMAILS — only these Google accounts get admin.
+function isEmailAllowedAdmin(email) {
+  if (!email) return false;
+  const list = (process.env.ADMIN_ALLOWED_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!list.length) return false;
+  return list.includes(String(email).toLowerCase());
+}
+
 // Decrement stock atomically after confirmed payment
 async function decrementStock(lines) {
   for (const line of lines) {
@@ -106,4 +195,36 @@ function orderConfirmHtml({ order_ref, buyer_name, total }) {
 </body></html>`;
 }
 
-module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, sendEmail, orderConfirmHtml, PAYSTACK_SECRET };
+// ── Error monitoring (fire-and-forget) ────────────────────────────
+// Always logs to stderr. If SENTRY_DSN is set, also reports to Sentry.
+// Never throws — monitoring must never break a request.
+function captureError(err, context = {}) {
+  try {
+    console.error('[td-error]', err && err.stack ? err.stack : err, context);
+    const dsn = process.env.SENTRY_DSN;
+    if (!dsn || typeof fetch !== 'function') return;
+    const m = dsn.match(/^https:\/\/([^@]+)@([^/]+)\/(.+)$/);
+    if (!m) return;
+    const [, key, host, projectId] = m;
+    const payload = {
+      event_id: crypto.randomBytes(16).toString('hex'),
+      timestamp: new Date().toISOString(),
+      platform: 'node',
+      level: 'error',
+      logger: 'totallydifferent-api',
+      environment: process.env.VERCEL_ENV || 'production',
+      exception: { values: [{ type: (err && err.name) || 'Error', value: (err && err.message) || String(err) }] },
+      extra: context,
+    };
+    fetch(`https://${host}/api/${projectId}/store/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${key}, sentry_client=totallydifferent/1.0`,
+      },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  } catch (_) { /* monitoring must never throw */ }
+}
+
+module.exports = { sb, calcShipping, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, verifySupabaseUser, isEmailAllowedAdmin, captureError };

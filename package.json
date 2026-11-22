@@ -5,9 +5,13 @@
   "main": "api/index.js",
   "engines": { "node": ">=20" },
   "scripts": {
-    "test": "node --test tests/unit.test.js tests/api.test.js"
+    "test": "node --test tests/unit.test.js tests/api.test.js tests/integration.test.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
   }
 }

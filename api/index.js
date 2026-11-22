@@ -11,15 +11,17 @@
 //   GET  /api/admin/products      → Admin (service-role)
 //   POST /api/admin/products      → Admin
 //   PATCH /api/admin/orders/:ref  → Admin
+//   GET  /api/reviews?product=    → Reviews Engine
+//   POST /api/reviews             → Reviews Engine
 
-const { sb, recomputeTotal, verifyPaystackTx, decrementStock, sendEmail, orderConfirmHtml, PAYSTACK_SECRET } = require('./shared');
+const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, verifySupabaseUser, isEmailAllowedAdmin, captureError } = require('./shared');
 const crypto = require('crypto');
 
 function json(res, status, body) {
   res.status(status).json(body);
 }
 
-module.exports = async (req, res) => {
+const handler = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -28,6 +30,13 @@ module.exports = async (req, res) => {
   const q   = Object.fromEntries(new URL(req.url, 'http://x').searchParams);
 
   // ── PRODUCT ENGINE ─────────────────────────────────────────
+  if (url === '/brands' && req.method === 'GET') {
+    const { data, error } = await sb().from('brands')
+      .select('*').eq('is_active', true).order('sort', { ascending: true });
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 200, { brands: data });
+  }
+
   if (url === '/products' && req.method === 'GET') {
     const filter = sb().from('products')
       .select('*, product_variants(*)')
@@ -36,6 +45,7 @@ module.exports = async (req, res) => {
       .order('created_at', { ascending: false });
     if (q.category) filter.eq('category', q.category);
     if (q.subcategory) filter.eq('subcategory', q.subcategory);
+    if (q.brand) filter.eq('brand_id', q.brand);
     const { data, error } = await filter;
     if (error) return json(res, 400, { error: error.message });
     return json(res, 200, { products: data });
@@ -192,9 +202,28 @@ module.exports = async (req, res) => {
   }
 
   // ── ADMIN ENGINE ───────────────────────────────────────────
-  // All admin routes require Authorization: Bearer <service_role_key>
+  // Password login → short-lived signed session token. The service key is
+  // also accepted as a bearer for programmatic use (back-compat).
+  if (url === '/admin/login' && req.method === 'POST') {
+    if (!process.env.ADMIN_PASSWORD) return json(res, 503, { error: 'Admin login not configured' });
+    const { username, password } = req.body || {};
+    if (!checkAdminCredentials(username, password)) return json(res, 401, { error: 'Invalid username or password' });
+    return json(res, 200, { token: signAdminSession(), expires_in: 12 * 60 * 60 });
+  }
+
+  // Google sign-in → verify the Supabase access token, check the email
+  // allow-list, then issue the same short-lived admin session token.
+  if (url === '/admin/google' && req.method === 'POST') {
+    const { access_token } = req.body || {};
+    if (!access_token) return json(res, 400, { error: 'access_token required' });
+    const user = await verifySupabaseUser(access_token);
+    if (!user) return json(res, 401, { error: 'Could not verify Google sign-in' });
+    if (!isEmailAllowedAdmin(user.email)) return json(res, 403, { error: 'not_authorized' });
+    return json(res, 200, { token: signAdminSession(), expires_in: 12 * 60 * 60, email: user.email });
+  }
+
   const adminToken = (req.headers.authorization || '').replace('Bearer ', '');
-  if (url.startsWith('/admin') && adminToken !== process.env.SUPABASE_SERVICE_KEY)
+  if (url.startsWith('/admin') && !isAdminAuthorized(adminToken))
     return json(res, 401, { error: 'Unauthorized' });
 
   if (url === '/admin/products' && req.method === 'GET') {
@@ -204,14 +233,75 @@ module.exports = async (req, res) => {
   }
 
   if (url === '/admin/products' && req.method === 'POST') {
-    const { id, name, description, category, subcategory, base_price, images, is_featured } = req.body || {};
+    const { id, name, description, category, subcategory, base_price, compare_at_price, images, is_featured, brand_id, specs } = req.body || {};
     if (!id || !name || !category || base_price == null)
       return json(res, 400, { error: 'id, name, category, base_price required' });
     const { data, error } = await sb().from('products')
-      .insert({ id, name, description, category, subcategory, base_price, images: images || [], is_featured: is_featured || false })
+      .insert({ id, name, description, category, subcategory, base_price, compare_at_price: compare_at_price ?? null, images: images || [], is_featured: is_featured || false, brand_id: brand_id || null, specs: specs || null })
       .select().single();
     if (error) return json(res, 400, { error: error.message });
     return json(res, 201, { product: data });
+  }
+
+  // Update an existing product (images, price, flags, copy)
+  const adminProductId = url.match(/^\/admin\/products\/([^/]+)$/)?.[1];
+  if (adminProductId && req.method === 'PATCH') {
+    const allowed = ['name','description','category','subcategory','base_price','compare_at_price','images','is_active','is_featured','brand_id','specs'];
+    const patch = {};
+    for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
+    if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });
+    const { data, error } = await sb().from('products')
+      .update(patch).eq('id', adminProductId).select('*, product_variants(*)').single();
+    if (error || !data) return json(res, 404, { error: error?.message || 'Product not found' });
+    return json(res, 200, { product: data });
+  }
+
+  // Upload an image to the product-images bucket → returns a public URL
+  if (url === '/admin/upload' && req.method === 'POST') {
+    const { filename, content_base64, content_type } = req.body || {};
+    if (!content_base64 || !content_type)
+      return json(res, 400, { error: 'content_base64 and content_type required' });
+    try {
+      const imageUrl = await uploadProductImage({
+        filename: filename || 'upload.jpg', contentBase64: content_base64, contentType: content_type,
+      });
+      return json(res, 201, { url: imageUrl });
+    } catch (e) {
+      return json(res, 400, { error: e.message });
+    }
+  }
+
+  // Create a product variant
+  if (url === '/admin/variants' && req.method === 'POST') {
+    const { product_id, label, size, colour, volume, price_override, stock, sku } = req.body || {};
+    if (!product_id || !label || !sku)
+      return json(res, 400, { error: 'product_id, label, sku required' });
+    const { data, error } = await sb().from('product_variants')
+      .insert({ product_id, label, size: size || null, colour: colour || null, volume: volume || null,
+                price_override: price_override ?? null, stock: stock ?? 0, sku })
+      .select().single();
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 201, { variant: data });
+  }
+
+  // Update a variant (stock / price)
+  const adminVariantId = url.match(/^\/admin\/variants\/([^/]+)$/)?.[1];
+  if (adminVariantId && req.method === 'PATCH') {
+    const patch = {};
+    for (const k of ['label','stock','price_override','compare_at_price','sku']) if (k in (req.body || {})) patch[k] = req.body[k];
+    if (!Object.keys(patch).length) return json(res, 400, { error: 'No updatable fields provided' });
+    const { data, error } = await sb().from('product_variants')
+      .update(patch).eq('id', adminVariantId).select().single();
+    if (error || !data) return json(res, 404, { error: error?.message || 'Variant not found' });
+    return json(res, 200, { variant: data });
+  }
+
+  // List orders (newest first)
+  if (url === '/admin/orders' && req.method === 'GET') {
+    const { data, error } = await sb().from('orders')
+      .select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 200, { orders: data });
   }
 
   const adminOrderRef = url.match(/^\/admin\/orders\/([^/]+)$/)?.[1];
@@ -225,5 +315,67 @@ module.exports = async (req, res) => {
     return json(res, 200, { order: data });
   }
 
+  // ── REVIEWS ENGINE ─────────────────────────────────────────
+  // GET /api/reviews?product=<id>  — approved reviews for a product
+  // GET /api/reviews/summary — approved rating average + count per product.
+  // Powers the stars on grid cards (real social proof, never fabricated).
+  if (url === '/reviews/summary' && req.method === 'GET') {
+    const { data, error } = await sb().from('reviews')
+      .select('product_id, rating').eq('is_approved', true);
+    if (error) return json(res, 400, { error: error.message });
+    const totals = {};
+    for (const r of data || []) {
+      const t = totals[r.product_id] || (totals[r.product_id] = { count: 0, sum: 0 });
+      t.count++; t.sum += r.rating;
+    }
+    const summary = {};
+    for (const [id, t] of Object.entries(totals))
+      summary[id] = { count: t.count, avg: Math.round((t.sum / t.count) * 10) / 10 };
+    return json(res, 200, { summary });
+  }
+
+  if (url === '/reviews' && req.method === 'GET') {
+    if (!q.product) return json(res, 400, { error: 'product param required' });
+    const { data, error } = await sb().from('reviews')
+      .select('id, reviewer_name, rating, comment, photo_url, created_at')
+      .eq('product_id', q.product)
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 200, { reviews: data });
+  }
+
+  // POST /api/reviews  — submit a new review (pending approval)
+  if (url === '/reviews' && req.method === 'POST') {
+    const { product_id, reviewer_name, rating, comment, photo_url } = req.body || {};
+    if (!product_id || !reviewer_name || !rating) {
+      return json(res, 400, { error: 'product_id, reviewer_name and rating are required' });
+    }
+    const r = Number(rating);
+    if (!Number.isInteger(r) || r < 1 || r > 5) {
+      return json(res, 400, { error: 'rating must be 1–5' });
+    }
+    const { error } = await sb().from('reviews').insert({
+      product_id,
+      reviewer_name: String(reviewer_name).slice(0, 80),
+      rating: r,
+      comment: comment ? String(comment).slice(0, 1200) : null,
+      photo_url: photo_url ? String(photo_url).slice(0, 500) : null,
+      is_approved: false,
+    });
+    if (error) return json(res, 400, { error: error.message });
+    return json(res, 201, { message: 'Review submitted — it will appear after approval. Thank you!' });
+  }
+
   return json(res, 404, { error: 'Not found' });
+};
+
+// Top-level guard: capture any unhandled error and return a clean 500.
+module.exports = async (req, res) => {
+  try {
+    return await handler(req, res);
+  } catch (err) {
+    captureError(err, { method: req.method, url: req.url });
+    if (!res.headersSent) return json(res, 500, { error: 'Internal server error' });
+  }
 };
