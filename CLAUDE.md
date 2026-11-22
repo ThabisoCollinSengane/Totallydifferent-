@@ -2,6 +2,15 @@
 
 Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 
+## 🤖 AI RESEARCH TEAM — how every new idea is handled
+Five subagents in `.claude/agents/`: **researcher** (finds untested edge sources, ranked list ->
+`research/ideas.md` "proposed") -> **spec-writer** (idea -> falsifiable spec, pass rule fixed first,
+`research/specs/P<n>_*.md`) -> **trader approves** -> **builder** (study / default-OFF flag +
+workflow, random-data check first) -> **auditor** (assumes a bug: look-ahead, circularity, baseline,
+selection, multiple comparisons, costs, plumbing, defaults) -> **reporter** (plain verdict, CLAUDE.md
+entry, `research/ideas.md` row). The trader is the gate before build and after the verdict; nothing
+changes live prices, defaults, or spends money without approval.
+
 ## Stack
 | Layer | Tool |
 |---|---|
