@@ -2034,7 +2034,10 @@
     drawer.classList.remove('items-in');
     const row = document.querySelectorAll('#cart-items .cart-item')[idx];
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const commit = () => { cart.splice(idx, 1); saveCart(); updateCartUI(); };
+    // Remove by identity, not position: the bag can redraw during the slide-out
+    // (a qty tap, an add), and a stale index would remove the wrong item.
+    const item = cart[idx];
+    const commit = () => { const i = cart.indexOf(item); if (i > -1) { cart.splice(i, 1); saveCart(); } updateCartUI(); };
     if (!row || reduce) return commit();
     if (row.classList.contains('leaving')) return;    // a double tap must not remove two items
     // Slide the row out first, then remove it.
