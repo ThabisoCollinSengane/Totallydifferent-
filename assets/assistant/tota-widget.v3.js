@@ -152,7 +152,7 @@
   }
   function defaultPos() { return { fx: 1, fy: 1 }; } // bottom-right; place() clamps it in
   var cur = pos && typeof pos.fx === 'number' ? pos : defaultPos();
-  window.addEventListener('resize', function () { place(cur.fx, cur.fy); placeBubble(); });
+  window.addEventListener('resize', function () { place(cur.fx, cur.fy); bubble.hidden = true; });
 
   var drag = null;
   pet.addEventListener('pointerdown', function (e) {

@@ -119,20 +119,6 @@
   }
   .cart-count.visible { display: flex; }
 
-  /* HERO */
-  .hero {
-    background: var(--matte-black); color: var(--white); text-align: center;
-    padding: 64px 24px;
-  }
-  .hero h1 { font-family: var(--font); font-size: clamp(28px, 6vw, 56px); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 12px; }
-  .hero p { color: var(--grey); font-size: 15px; letter-spacing: 0.04em; }
-  .hero-badge { display: inline-block; margin-top: 16px; padding: 6px 16px; border: 1px solid var(--gold); color: var(--gold); font-size: 12px; letter-spacing: 0.08em; }
-  .hero-cta {
-    display: inline-block; margin-top: 22px; padding: 12px 30px; background: var(--gold); color: var(--black);
-    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; border-radius: var(--radius);
-    transition: background var(--trans), transform var(--trans);
-  }
-  .hero-cta:hover { background: var(--gold-light); transform: translateY(-2px); }
 
   /* FILTERS */
   .filters { display: flex; align-items: center; gap: var(--space-xs); padding: 20px var(--space-md); border-bottom: 1px solid var(--studio-border); flex-wrap: wrap; background: var(--studio-surface); }
@@ -366,6 +352,41 @@
   .remove-item { background: none; border: none; color: var(--cream-muted); cursor: pointer; font-size: 12px; margin-left: auto; padding: 4px; }
   .remove-item:hover { color: var(--red); }
   .cart-footer { padding: 20px 24px; border-top: 1px solid var(--grey-border); }
+  /* Bag + checkout motion: things respond when touched. CSS-only effects, reduced-motion safe. */
+  .ship-fill { transition: width 0.6s var(--ease-out-expo); }
+  @keyframes tdPulse { 0% { transform: scale(1); } 35% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  .cart-item.changed .qty-val, .cart-item.changed .cart-item-price, .cart-row.total.changed span:last-child { display: inline-block; animation: tdPulse 0.38s ease-out; }
+  .cart-item { max-height: 220px; }
+  .cart-item.leaving { transform: translateX(110%); opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; overflow: hidden;
+    transition: transform 0.28s var(--ease-in-quick), opacity 0.28s, max-height 0.25s 0.12s, padding 0.25s 0.12s; }
+  @keyframes tdUnlock { 0% { transform: scale(0.92); opacity: 0.4; } 55% { transform: scale(1.06); } 100% { transform: none; opacity: 1; } }
+  .ship-msg.unlocked.just { animation: tdUnlock 0.7s ease-out; }
+  .qty-btn, .remove-item { transition: transform 0.12s ease, border-color var(--trans); }
+  .qty-btn:active, .remove-item:active { transform: scale(0.85); }
+  .checkout-btn, .pay-btn { position: relative; overflow: hidden; }
+  .checkout-btn:active:not(:disabled), .pay-btn:active:not(:disabled) { transform: scale(0.97); }
+  .checkout-btn::after, .pay-btn::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent); transform: skewX(-20deg); animation: tdShine 3.8s ease-in-out 1.2s infinite; }
+  .btn-loading::after, .checkout-btn:disabled::after, .pay-btn:disabled::after { display: none; }
+  @keyframes tdShine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+  @keyframes tdRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .modal-overlay.open .modal-body > * { animation: tdRise 0.42s var(--ease-out-expo) both; }
+  .modal-overlay.open .modal-body > :nth-child(2) { animation-delay: 40ms; } .modal-overlay.open .modal-body > :nth-child(3) { animation-delay: 80ms; }
+  .modal-overlay.open .modal-body > :nth-child(4) { animation-delay: 120ms; } .modal-overlay.open .modal-body > :nth-child(5) { animation-delay: 160ms; }
+  .modal-overlay.open .modal-body > :nth-child(6) { animation-delay: 200ms; } .modal-overlay.open .modal-body > :nth-child(n+7) { animation-delay: 240ms; }
+  .form-group label { transition: color var(--trans), transform var(--trans); }
+  .form-group:focus-within label { color: var(--gold); transform: translateX(3px); }
+  .form-group input:focus, .form-group textarea:focus { box-shadow: 0 6px 18px rgba(212,184,126,0.18); }
+  @keyframes tdShake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+  .modal-overlay.open .modal.shake { animation: tdShake 0.4s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    .ship-fill, .cart-item.leaving, .qty-btn, .remove-item, .form-group label { transition: none; }
+    .cart-item.changed .qty-val, .cart-item.changed .cart-item-price, .cart-row.total.changed span:last-child, .ship-msg.unlocked.just,
+    .checkout-btn::after, .pay-btn::after, .modal-overlay.open .modal-body > *, .modal-overlay.open .modal.shake { animation: none; }
+    .checkout-btn::after, .pay-btn::after { display: none; }
+    .form-group:focus-within label { transform: none; }
+  }
+
   .cart-subtotals { margin-bottom: 16px; }
   .cart-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
   .cart-row.total { font-size: 16px; font-weight: 600; border-top: 1px solid var(--grey-border); padding-top: 10px; margin-top: 10px; }
@@ -672,7 +693,7 @@
      if Google Fonts fails, the sign falls back to a heavy system font. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Unbounded:wght@700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Unbounded:wght@700;800&display=swap" media="print" onload="this.media='all'">
 <style>
   .nh {
     --n-night: #07060d; --n-panel: #120f1d; --n-line: #2a2340; --n-ink: #f3efff; --n-muted: #a59fbf;
@@ -753,7 +774,7 @@
   @keyframes nh-slide { to { transform: translateX(-50%); } }
 
   /* lookbook */
-  .nh-look { scroll-margin-top: var(--header-h, 60px); }
+  .nh-look, #shop { scroll-margin-top: var(--header-h, 60px); }
   .nh-look .nh-wrap { padding-top: 48px; padding-bottom: 40px; }
   .nh-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
   .nh-h2 { font: 800 clamp(26px, 4.6vw, 40px)/1.05 var(--n-display); margin: 0; letter-spacing: -.01em; color: var(--n-ink); }
@@ -784,9 +805,18 @@
   .nh-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--n-line); transition: all .25s ease; }
   .nh-dots button[aria-current="true"]::before { width: 22px; border-radius: 999px; background: var(--n-pink); box-shadow: 0 0 10px var(--n-pink); }
 
+  @media (max-width: 860px) { .nh-stage { max-height: 340px; aspect-ratio: auto; height: 340px; max-width: 360px; } .nh-frame { aspect-ratio: 1 / 1; } }
+  .nh-after { border-top: 1px solid var(--n-line); }
+  .nh-pause { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; margin-bottom: 10px; border-radius: 999px; border: 1px solid var(--n-line);
+    background: transparent; color: var(--n-muted); font: 600 13px var(--font-sans); cursor: pointer; }
+  .nh-pause:hover { color: var(--n-ink); border-color: var(--n-cyan); }
+  .nh-ticker:hover .nh-track { animation-play-state: paused; }
+  .nh-dots button { width: 44px; height: 44px; }
+  .nh-dots button::before { background: #6b6390; }
   @media (prefers-reduced-motion: reduce) {
     .nh-track, .nh-bob, .nh-char.hop .nh-bob, .nh-sign.flicker, .nh-slide.on .fg { animation: none; }
     .nh-char, .nh-flip, .nh-slide { transition: none; }
+    .nh-pause { display: none; }
   }
 </style>
 </head>
@@ -831,7 +861,7 @@
         <button class="nh-char nh-him" id="nh-him" type="button" aria-label="Say hi to him">
           <span class="nh-bob"><span class="nh-flip"><img src="/assets/crew/him.webp" alt="Model in the white Antisocial eye-sleeve longsleeve and black Novacaine cargo pants" width="298" height="1000" decoding="async" fetchpriority="high"></span></span>
         </button>
-        <button class="nh-char nh-her" id="nh-her" type="button" aria-label="Change her pose">
+        <button class="nh-char nh-her" id="nh-her" type="button" aria-label="Say hi to her">
           <span class="nh-bob"><span class="nh-flip"><img id="nh-her-img" src="/assets/crew/her.webp" alt="Model in the white Antisocial eye-sleeve longsleeve and mauve Novacaine Women leggings, with long wavy hair" width="231" height="1000" decoding="async" fetchpriority="high"></span></span>
         </button>
       </div>
@@ -847,21 +877,7 @@
   </div>
 </div>
 
-<section class="nh-look" id="nh-look" aria-labelledby="nh-look-title">
-  <div class="nh-wrap">
-    <div class="nh-head">
-      <h2 class="nh-h2" id="nh-look-title">On the <em>models</em></h2>
-      <p class="nh-note">How the pieces wear in real life. Swipe or use the arrows.</p>
-    </div>
-    <div role="region" aria-roledescription="carousel" aria-label="Clothes on models">
-      <div class="nh-frame" id="nh-frame">
-        <button class="nh-nav nh-prev" id="nh-prev" type="button" aria-label="Previous look">‹</button>
-        <button class="nh-nav nh-next" id="nh-next" type="button" aria-label="Next look">›</button>
-      </div>
-      <div class="nh-dots" id="nh-dots"></div>
-    </div>
-  </div>
-</section>
+
 </div>
 
 <!-- Trust bar — answers the three questions buyers hesitate on, before they ask -->
@@ -914,6 +930,25 @@
     <div class="sk-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line sm"></div></div>
   </div>
 </main>
+
+<div class="nh nh-after">
+<section class="nh-look" id="nh-look" aria-labelledby="nh-look-title">
+  <div class="nh-wrap">
+    <div class="nh-head">
+      <h2 class="nh-h2" id="nh-look-title">On the <em>models</em></h2>
+      <p class="nh-note">How the pieces wear in real life. Swipe or use the arrows.</p>
+    </div>
+    <div role="region" aria-roledescription="carousel" aria-label="Clothes on models">
+      <button class="nh-pause" id="nh-pause" type="button" aria-pressed="false">Pause slideshow</button>
+      <div class="nh-frame" id="nh-frame">
+        <button class="nh-nav nh-prev" id="nh-prev" type="button" aria-label="Previous look">‹</button>
+        <button class="nh-nav nh-next" id="nh-next" type="button" aria-label="Next look">›</button>
+      </div>
+      <div class="nh-dots" id="nh-dots"></div>
+    </div>
+  </div>
+</section>
+</div>
 
 <section class="about" id="about">
   <div class="about-inner">
@@ -1920,6 +1955,8 @@
     }
 
     footer.style.display = 'block';
+    const oldFill = document.querySelector('#cart-subtotals .ship-fill');
+    const prevPct = oldFill ? parseFloat(oldFill.style.width) : null;
     el.innerHTML = cart.map((item, idx) => {
       const imgHtml = item.images && item.images[0]
         ? pic(item.images[0], `alt="${escHtml(item.product_name)}"`)
@@ -1968,20 +2005,50 @@
       </div>
       <div class="cart-row total"><span>Total</span><span>R${total.toFixed(2)}</span></div>
     `;
+    // Motion: the delivery bar grows from where it was; unlocking free delivery pops.
+    const fill = document.querySelector('#cart-subtotals .ship-fill');
+    if (fill && prevPct != null && !isNaN(prevPct) && prevPct !== pct) {
+      fill.style.width = prevPct + '%';
+      requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = pct + '%'; }));
+    }
+    if (!toFree && renderCartItems._free === false) document.querySelector('#cart-subtotals .ship-msg').classList.add('just');
+    renderCartItems._free = !toFree;
   }
 
   function changeQty(idx, delta) {
     document.getElementById('cart-drawer').classList.remove('items-in');
+    const before = cart[idx].quantity;
     cart[idx].quantity = Math.max(1, cart[idx].quantity + delta);
     saveCart();
     updateCartUI();
+    if (cart[idx].quantity !== before) {               // motion only: pulse the row and the total
+      const row = document.querySelectorAll('#cart-items .cart-item')[idx];
+      const tot = document.querySelector('#cart-subtotals .cart-row.total');
+      if (row) row.classList.add('changed');
+      if (tot) tot.classList.add('changed');
+    }
   }
 
   function removeItem(idx) {
-    document.getElementById('cart-drawer').classList.remove('items-in');
-    cart.splice(idx, 1);
-    saveCart();
-    updateCartUI();
+    const drawer = document.getElementById('cart-drawer');
+    drawer.classList.remove('items-in');
+    const row = document.querySelectorAll('#cart-items .cart-item')[idx];
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const commit = () => { cart.splice(idx, 1); saveCart(); updateCartUI(); };
+    if (!row || reduce) return commit();
+    if (row.classList.contains('leaving')) return;    // a double tap must not remove two items
+    // Slide the row out first, then remove it.
+    drawer.querySelectorAll('.remove-item').forEach(b => { b.disabled = true; });
+    row.classList.add('leaving');
+    setTimeout(commit, 300);
+  }
+
+  // Shake the checkout box when something needs fixing.
+  function shakeModal() {
+    const m = document.querySelector('#checkout-modal .modal');
+    if (!m) return;
+    m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake');
+    setTimeout(() => m.classList.remove('shake'), 450);
   }
 
   function openCart() {
@@ -2074,12 +2141,12 @@
 
     if (!name || !email || !phone || !address) {
       errEl.textContent = 'Please fill in all fields.';
-      errEl.classList.add('visible');
+      errEl.classList.add('visible'); shakeModal();
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errEl.textContent = 'Please enter a valid email address.';
-      errEl.classList.add('visible');
+      errEl.classList.add('visible'); shakeModal();
       return;
     }
 
@@ -2108,7 +2175,7 @@
       window.location.href = data.authorization_url || data.payment_url;
     } catch (e) {
       errEl.textContent = e.message;
-      errEl.classList.add('visible');
+      errEl.classList.add('visible'); shakeModal();
       setBtnLoading(payBtn, false, 'Pay with Paystack');
     }
   }

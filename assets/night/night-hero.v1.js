@@ -43,7 +43,7 @@
   }
   him.addEventListener('click', function () { hop(him); himIx = (himIx + 1) % HIM.length; say(HIM[himIx]); });
   her.addEventListener('click', function () { changePose(); herIx = (herIx + 1) % HER.length; say(HER[herIx]); });
-  document.getElementById('nh-pose').addEventListener('click', function () { changePose(); say(pose ? 'New pose.' : 'And back.'); });
+  document.getElementById('nh-pose').addEventListener('click', function () { var next = (pose + 1) % POSES.length; changePose(); say(next ? 'New pose.' : 'And back.'); });
 
   // They lean toward your cursor or finger.
   if (!reduced) {
@@ -88,8 +88,8 @@
     var s = el('div', 'nh-slide');
     s.setAttribute('role', 'group'); s.setAttribute('aria-roledescription', 'slide');
     s.setAttribute('aria-label', (i + 1) + ' of ' + LOOKS.length + ': ' + l.brand);
-    var bg = new Image(); bg.className = 'bg'; bg.alt = ''; bg.setAttribute('aria-hidden', 'true'); bg.decoding = 'async'; bg.loading = 'lazy'; bg.src = l.img;
-    var fg = new Image(); fg.className = 'fg'; fg.alt = l.brand + ' clothes on models'; fg.decoding = 'async'; fg.loading = 'lazy'; fg.src = l.img;
+    var bg = new Image(); bg.className = 'bg'; bg.alt = ''; bg.setAttribute('aria-hidden', 'true'); bg.decoding = 'async'; bg.dataset.src = l.img;
+    var fg = new Image(); fg.className = 'fg'; fg.alt = l.brand + ' clothes on models'; fg.decoding = 'async'; fg.dataset.src = l.img;
     var cap = el('div', 'nh-cap'), tx = el('div', 'nh-cap-text');
     tx.appendChild(el('span', 'nh-cap-brand', l.brand)); tx.appendChild(el('span', 'nh-cap-line', l.line)); cap.appendChild(tx);
     var btn = el('button', 'nh-cap-shop', 'Shop ' + l.brand); btn.type = 'button';
@@ -101,8 +101,14 @@
     d.addEventListener('click', function () { go(i); hold(); });
     dotsEl.appendChild(d); dots.push(d);
   });
+  // Only the current and next slides download, so the page stays light on mobile data.
+  function load(k) {
+    var imgs = slides[(k + slides.length) % slides.length].querySelectorAll('img[data-src]');
+    for (var j = 0; j < imgs.length; j++) { imgs[j].src = imgs[j].dataset.src; imgs[j].removeAttribute('data-src'); }
+  }
   function go(i) {
     cur = (i + slides.length) % slides.length;
+    load(cur); load(cur + 1);
     slides.forEach(function (s, k) {
       var on = k === cur;
       s.classList.toggle('on', on);
@@ -111,13 +117,14 @@
     });
     dots.forEach(function (d, k) { d.setAttribute('aria-current', k === cur ? 'true' : 'false'); });
   }
-  function hold() { paused = true; clearTimeout(resumeT); resumeT = setTimeout(function () { paused = false; }, 9000); }
   document.getElementById('nh-prev').addEventListener('click', function () { go(cur - 1); hold(); });
   document.getElementById('nh-next').addEventListener('click', function () { go(cur + 1); hold(); });
+  var holding = false;
+  function hold() { paused = true; holding = true; clearTimeout(resumeT); resumeT = setTimeout(function () { paused = false; holding = false; }, 9000); }
   frame.addEventListener('mouseenter', function () { paused = true; });
-  frame.addEventListener('mouseleave', function () { paused = false; });
+  frame.addEventListener('mouseleave', function () { if (!holding) paused = false; });
   frame.addEventListener('focusin', function () { paused = true; });
-  frame.addEventListener('focusout', function () { paused = false; });
+  frame.addEventListener('focusout', function (e) { if (!holding && !frame.contains(e.relatedTarget)) paused = false; });
   var sx = null;
   frame.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; }, { passive: true });
   frame.addEventListener('touchend', function (e) {
@@ -128,5 +135,12 @@
   if (window.IntersectionObserver) new IntersectionObserver(function (es) { inView = es[0].isIntersecting; }).observe(frame);
   else inView = true;
   go(0);
-  if (!reduced) setInterval(function () { if (!paused && inView && !document.hidden) go(cur + 1); }, 5000);
+  // A pause button for the auto-advance (moving content must be stoppable).
+  var stopped = false, pauseBtn = document.getElementById('nh-pause');
+  if (pauseBtn) pauseBtn.addEventListener('click', function () {
+    stopped = !stopped;
+    pauseBtn.setAttribute('aria-pressed', stopped ? 'true' : 'false');
+    pauseBtn.textContent = stopped ? 'Play slideshow' : 'Pause slideshow';
+  });
+  if (!reduced) setInterval(function () { if (!stopped && !paused && inView && !document.hidden) go(cur + 1); }, 5000);
 })();
