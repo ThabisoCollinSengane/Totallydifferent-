@@ -101,7 +101,7 @@ Thabiso Collins Engane — thacollin2@gmail.com
 ## Agent Team (`.claude/agents/`)
 | Agent | Use it for | Edits code? |
 |---|---|---|
-| `researcher` | Suppliers, DTF/hair sourcing, ZAR pricing, competitors, SA law/IP — cited briefs in `docs/research/` | No |
+| `researcher` | Anything across the business — all brands and hair, suppliers, pricing, competitors, trends, channels, delivery, funding, SA law/IP, what to test next — cited briefs in `docs/research/` | No |
 | `checkout-guardian` | **Required** for any change to `api/`, `vercel.json`, checkout, prices, stock, Paystack or keys — audits the 9 Hard Rules | No |
 | `qa-tester` | Runs `npm test`, adds missing tests, runs Playwright E2E on request | Tests only |
 | `code-reviewer` | General pre-merge review: bugs, XSS, auth, data safety | No |
