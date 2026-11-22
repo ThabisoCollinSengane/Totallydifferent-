@@ -14,7 +14,7 @@ Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 1. ✅ Schema + seed data (`products` ×5, `product_variants` ×12, `orders`)
 2. ✅ API contract (10 endpoints defined)
 3. ✅ Backend logic — all 5 engines + Communication Engine
-4. ✅ Tests + validation — 50 tests, 0 failures (`npm test`)
+4. ✅ Tests + validation — 65 tests, 0 failures (`npm test`)
 5. ⬜ UI system (card-based, checkout flow)
 6. ✅ Animations (bounce add-to-cart, slide transitions, CTA loading state) — see "Design & motion skills"
 7. ⬜ Final polish
@@ -32,6 +32,7 @@ Premium clothing & hair e-commerce. Backend-first, API-first, agent-driven.
 | GET | /api/admin/products | Admin | Bearer <SUPABASE_SERVICE_KEY> |
 | POST | /api/admin/products | Admin | Bearer required |
 | PATCH | /api/admin/orders/:ref | Admin | Bearer required |
+| POST | /api/assistant | TotaAI | Read-only chat: catalogue + order status (no buyer PII), rate-limited, price-guarded |
 
 ## DB Schema (Supabase)
 ```
@@ -70,11 +71,14 @@ vercel.json     — API rewrite /api/(.*) → /api/index.js ONLY
                   NEVER add /(.*) → index.html (breaks API routing)
 tests/unit.test.js  — pure logic: calcShipping, HMAC, order ref format
 tests/api.test.js   — route handler tests (Supabase mocked, no real network)
+api/_assistant.js   — TotaAI (Groq). `_` prefix stops Vercel deploying it as its own function
+assets/assistant/   — TotaAI meerkat frames + tota-widget.v1.js (bump the version to change it)
+tests/assistant.test.js — TotaAI: validation, price guard, no-PII order lookup, rate limit
 ```
 
 ## Running Tests
 ```bash
-npm test   # runs all 50 tests, must pass before any push to main
+npm test   # runs all 65 tests, must pass before any push to main
 ```
 
 ## Environment Variables
@@ -90,6 +94,7 @@ See `.env.example`. Add all to Vercel → Settings → Environment Variables.
 | APP_URL | Yes | Paystack callback URL |
 | RESEND_API_KEY | Optional | Communication engine |
 | RESEND_FROM | Optional | Email from address |
+| GROQ_API_KEY | Optional | TotaAI assistant (`api/_assistant.js`); store's own key, not Pulsify's |
 
 ## Sibling Project
 Pulsify — different Supabase project, same Vercel/GitHub account.

@@ -13,7 +13,9 @@
 //   PATCH /api/admin/orders/:ref  → Admin
 //   GET  /api/reviews?product=    → Reviews Engine
 //   POST /api/reviews             → Reviews Engine
+//   POST /api/assistant           → TotaAI (read-only shopping assistant)
 
+const { handleAssistant } = require('./_assistant');
 const { sb, recomputeTotal, verifyPaystackTx, decrementStock, uploadProductImage, sendEmail, orderConfirmHtml, PAYSTACK_SECRET, checkAdminCredentials, signAdminSession, isAdminAuthorized, verifySupabaseUser, isEmailAllowedAdmin, captureError } = require('./shared');
 const crypto = require('crypto');
 
@@ -365,6 +367,12 @@ const handler = async (req, res) => {
     });
     if (error) return json(res, 400, { error: error.message });
     return json(res, 201, { message: 'Review submitted — it will appear after approval. Thank you!' });
+  }
+
+  // ── TotaAI shopping assistant (read-only: catalogue + order status, no PII) ──
+  if (url === '/assistant' && req.method === 'POST') {
+    const out = await handleAssistant(req);
+    return json(res, out.status, out.body);
   }
 
   return json(res, 404, { error: 'Not found' });
