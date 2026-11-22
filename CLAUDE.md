@@ -98,14 +98,52 @@ Do NOT mix env vars between the two projects.
 ## Owner
 Thabiso Collins Engane — thacollin2@gmail.com
 
+**How the owner reads results:** mostly on a phone, where `.md` file links do not open. Give feedback,
+reviews and summaries as plain text in the chat (or a shareable page/doc), never only as a link to a
+`.md` file. Files in the repo are fine as records, but the chat reply must carry the content.
+
 ## Agent Team (`.claude/agents/`)
 | Agent | Use it for | Edits code? |
 |---|---|---|
-| `researcher` | Suppliers, DTF/hair sourcing, ZAR pricing, competitors, SA law/IP — cited briefs in `docs/research/` | No |
+| `researcher` | Anything across the business — all brands and hair, suppliers, pricing, competitors, trends, channels, delivery, funding, SA law/IP, what to test next — cited briefs in `docs/research/` | No |
 | `checkout-guardian` | **Required** for any change to `api/`, `vercel.json`, checkout, prices, stock, Paystack or keys — audits the 9 Hard Rules | No |
 | `qa-tester` | Runs `npm test`, adds missing tests, runs Playwright E2E on request | Tests only |
 | `code-reviewer` | General pre-merge review: bugs, XSS, auth, data safety | No |
 | `ux-reviewer` | Mobile-first UI, conversion, accessibility, brand check for `apps/` changes | No |
+
+**Test pipeline** — every sales idea is tested so it can fail: `researcher` (ranked ideas ->
+`research/ideas.md`) -> `spec-writer` (spec with the pass rule fixed first, `research/specs/P<n>_*.md`)
+-> **owner approves** -> `builder` (tracking behind a default-OFF flag, tests, random-data check) ->
+`auditor` (assumes a bug or fluke) -> `reporter` (plain verdict here under "Test results").
+
+| Agent | Use it for | Edits code? |
+|---|---|---|
+| `spec-writer` | Turns an idea into a test with a fixed pass rule, costs and sample size | No (writes specs) |
+| `builder` | Builds an approved spec: attribution codes/links, report scripts, flags default OFF | Yes |
+| `auditor` | Checks results for attribution leaks, payday/holiday timing, hidden costs, plumbing | No |
+| `reporter` | Plain-language verdict in CLAUDE.md, `research/ideas.md`, `sales/creators.md` | Docs only |
+
+**Sales crew** — drafts only; the owner sends, posts, signs and pays:
+
+| Agent | Use it for | Output |
+|---|---|---|
+| `influencer-scout` | KZN-first TikTok creators per brand, fit and red flags from public info | `sales/creators.md` |
+| `pitch-writer` | Pitches for shoppers in person, salons and boutiques, and creator outreach | `sales/pitches/` |
+| `content-planner` | TikTok calendars per brand with hooks, shot lists and a tracking code per post | `sales/content/` |
+
+## Go-to-market (owner's plan)
+- Model: a LookFantastic-style store. Start with the in-house brands (Novacaine men and women,
+  Countryman, Antisocial, Kookies, Timeless, plus the hair line); add other brands later.
+- Channels: online store, face-to-face sales (Yoco card machine), salons and boutiques, TikTok creators.
+- Area: KZN (Durban) first, then nationwide.
+- Known gaps before channel tests can be measured:
+  1. Orders have no source, code or channel field, and the store has no discount codes.
+  2. Yoco sales do not reach the `orders` table, so stock does not drop. Hard Rule 2 means the owner
+     must decide how to handle this before anything is built.
+- Kookies is cannabis-themed: check TikTok's current guidelines before any Kookies creator or post.
+- Timeless (clothing) is the newest brand: positioning, products and its `brands` row (logo, colours,
+  tagline) are still to be set. "Timeless" is a common word, so search the CIPC trade mark register
+  (class 25, clothing) before investing in the name.
 
 ## Design & motion skills
 | Skill | Where | Use it for |
